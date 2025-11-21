@@ -61,7 +61,7 @@ coverage==7.10.6
     # via pytest-cov
 cryptography==45.0.5
     # via secretstorage
-cyclonedx-python-lib==11.0.0
+cyclonedx-python-lib==11.5.0
     # via pip-audit
 decli==0.6.3
     # via commitizen
