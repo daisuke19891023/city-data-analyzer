@@ -218,7 +218,7 @@ opentelemetry-api==1.35.0
     #   opentelemetry-semantic-conventions
 opentelemetry-exporter-otlp==1.35.0
     # via testproject (pyproject.toml)
-opentelemetry-exporter-otlp-proto-common==1.35.0
+opentelemetry-exporter-otlp-proto-common==1.38.0
     # via
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
