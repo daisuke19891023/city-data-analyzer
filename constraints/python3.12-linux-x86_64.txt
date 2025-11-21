@@ -301,7 +301,7 @@ protobuf==6.31.1
     # via
     #   googleapis-common-protos
     #   opentelemetry-proto
-psutil==7.0.0
+psutil==7.1.3
     # via scalene
 ptyprocess==0.7.0
     # via pexpect
