@@ -14,7 +14,10 @@ from clean_interfaces.interfaces.restapi import RestAPIInterface
 from clean_interfaces.models.dspy import QueryMetric, QueryOrder, QuerySpecModel
 from clean_interfaces.models.experiments import PlannedJob
 from clean_interfaces.services.datasets import DatasetRepository, init_database
-from clean_interfaces.services.dspy_program import InteractiveAnalysisProgram, InteractiveResponse
+from clean_interfaces.services.dspy_program import (
+    InteractiveAnalysisProgram,
+    InteractiveResponse,
+)
 from clean_interfaces.services.plan_experiments import PlanExperiments
 
 
@@ -62,7 +65,7 @@ def seed_dataset() -> int:
 
 
 @pytest.fixture
-def api_client(seed_dataset: int) -> TestClient:
+def api_client() -> TestClient:
     """Return TestClient bound to RestAPI interface."""
     interface = RestAPIInterface()
     return TestClient(interface.app)
@@ -73,7 +76,9 @@ def stub_planner(monkeypatch: pytest.MonkeyPatch) -> None:
     """Stub PlanExperiments to return deterministic jobs."""
 
     def _plan(
-        self: PlanExperiments, goal_description: str, datasets_meta: list[dict[str, object]]
+        _self: PlanExperiments,
+        _goal_description: str,
+        datasets_meta: list[dict[str, object]],
     ) -> list[PlannedJob]:
         return [
             PlannedJob(
@@ -113,7 +118,13 @@ def experiment_with_insight(seed_dataset: int) -> InsightCandidate:
         dataset_id=seed_dataset,
         job_type="metric_summary",
         description="",
-        query_spec={"filters": [], "group_by": [], "metrics": [], "order_by": [], "limit": 5},
+        query_spec={
+            "filters": [],
+            "group_by": [],
+            "metrics": [],
+            "order_by": [],
+            "limit": 5,
+        },
         status="pending",
         created_at=datetime.now(UTC),
         updated_at=datetime.now(UTC),
@@ -137,7 +148,10 @@ def experiment_with_insight(seed_dataset: int) -> InsightCandidate:
     return candidate
 
 
-def test_list_datasets_returns_seeded_metadata(api_client: TestClient, seed_dataset: int) -> None:
+def test_list_datasets_returns_seeded_metadata(
+    api_client: TestClient, seed_dataset: int,
+) -> None:
+    """Ensure seeded dataset metadata is returned by /datasets."""
     response = api_client.get("/datasets")
     assert response.status_code == 200
     datasets = response.json()
@@ -145,8 +159,9 @@ def test_list_datasets_returns_seeded_metadata(api_client: TestClient, seed_data
 
 
 def test_interactive_analysis_returns_response(
-    api_client: TestClient, seed_dataset: int, monkeypatch: pytest.MonkeyPatch
+    api_client: TestClient, seed_dataset: int, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Return interactive analysis response with stubbed program."""
     stubbed_response = InteractiveResponse(
         dataset_id=seed_dataset,
         question="人口を教えて",
@@ -165,7 +180,9 @@ def test_interactive_analysis_returns_response(
         program_version="stubbed",
     )
 
-    def _run(self: InteractiveAnalysisProgram, payload):  # type: ignore[override]
+    def _run(
+        _self: InteractiveAnalysisProgram, _payload: dict[str, object],
+    ) -> InteractiveResponse:  # type: ignore[override]
         return stubbed_response
 
     monkeypatch.setattr(InteractiveAnalysisProgram, "run", _run)
@@ -182,11 +199,13 @@ def test_interactive_analysis_returns_response(
 
 
 def test_interactive_requires_payload(api_client: TestClient) -> None:
+    """Reject interactive analysis without required payload."""
     response = api_client.post("/dspy/interactive", json={})
     assert response.status_code == 400
 
 
 def test_create_and_list_experiments(api_client: TestClient, seed_dataset: int) -> None:
+    """Create experiment then verify it appears in listing and detail."""
     create_resp = api_client.post(
         "/experiments",
         json={"goal_description": "人口分析", "dataset_ids": [seed_dataset]},
@@ -205,18 +224,27 @@ def test_create_and_list_experiments(api_client: TestClient, seed_dataset: int) 
 
 
 def test_experiment_detail_not_found(api_client: TestClient) -> None:
+    """Return 404 when experiment does not exist."""
     response = api_client.get("/experiments/9999")
     assert response.status_code == 404
 
 
-def test_insights_listing(api_client: TestClient, experiment_with_insight: InsightCandidate) -> None:
-    response = api_client.get(f"/experiments/{experiment_with_insight.experiment_id}/insights")
+def test_insights_listing(
+    api_client: TestClient, experiment_with_insight: InsightCandidate,
+) -> None:
+    """List insights for experiment including seeded candidate."""
+    response = api_client.get(
+        f"/experiments/{experiment_with_insight.experiment_id}/insights",
+    )
     assert response.status_code == 200
     insights = response.json()["insights"]
     assert any(item["id"] == experiment_with_insight.id for item in insights)
 
 
-def test_feedback_happy_path(api_client: TestClient, experiment_with_insight: InsightCandidate) -> None:
+def test_feedback_happy_path(
+    api_client: TestClient, experiment_with_insight: InsightCandidate,
+) -> None:
+    """Post feedback for existing insight and receive confirmation."""
     response = api_client.post(
         "/feedback",
         json={
@@ -232,6 +260,7 @@ def test_feedback_happy_path(api_client: TestClient, experiment_with_insight: In
 
 
 def test_feedback_requires_target(api_client: TestClient) -> None:
+    """Validate feedback requires target module."""
     response = api_client.post(
         "/feedback",
         json={"rating": 1, "target_module": "interactive"},
@@ -240,6 +269,7 @@ def test_feedback_requires_target(api_client: TestClient) -> None:
 
 
 def test_feedback_missing_candidate_returns_404(api_client: TestClient) -> None:
+    """Return 404 when posting feedback for missing insight."""
     response = api_client.post(
         "/feedback",
         json={
