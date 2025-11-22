@@ -79,14 +79,19 @@ cp .env.example .env
 
 ### Running the Application
 
+For the REST API interface (FastAPI + Uvicorn):
+
 ```bash
-# Run with default settings (uses .env file)
-uv run python -m clean_interfaces.main
+# From apps/python-backend/
+uv sync
+INTERFACE_TYPE=restapi PYTHONPATH=src uv run python -m clean_interfaces.main
+# Health check
+curl http://localhost:8000/health
+```
 
-# Run with custom environment file
-uv run python -m clean_interfaces.main --dotenv prod.env
+For the CLI interface (default):
 
-# Show help
+```bash
 uv run python -m clean_interfaces.main --help
 ```
 
