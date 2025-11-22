@@ -32,6 +32,18 @@ export type DatasetSummary = {
 };
 
 function getImportMetaEnv(): Record<string, string | undefined> | undefined {
+    // ts-jest compiles with a CommonJS module target during tests, which does
+    // not allow the `import.meta` syntax. Suppress the diagnostic here while
+    // still using the Vite-provided env object at runtime.
+    // @ts-ignore -- `import.meta` is available in the browser/Vite runtime
+    if (typeof import.meta !== 'undefined') {
+        // @ts-ignore -- see above
+        const env = (import.meta as {
+            env?: Record<string, string | undefined>;
+        }).env;
+        if (env) return env;
+    }
+
     return (
         globalThis as {
             __IMPORT_META_ENV__?: Record<string, string | undefined>;
@@ -48,8 +60,15 @@ function getEnv(key: string): string | undefined {
     return undefined;
 }
 
-export function resolveDataMode(): 'dummy' | 'api' {
-    const mode = (getEnv('VITE_DATA_MODE') || getEnv('DATA_MODE') || 'dummy')
+export function resolveDataMode(
+    preferredEnv?: Record<string, string | undefined>
+): 'dummy' | 'api' {
+    const lookup = (key: string): string | undefined => {
+        if (preferredEnv?.[key] !== undefined) return preferredEnv[key];
+        return getEnv(key);
+    };
+
+    const mode = (lookup('VITE_DATA_MODE') ?? lookup('DATA_MODE') ?? 'dummy')
         .toString()
         .toLowerCase();
     return mode === 'api' ? 'api' : 'dummy';

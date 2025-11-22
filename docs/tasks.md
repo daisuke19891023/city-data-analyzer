@@ -1,5 +1,8 @@
 # city-data-analyzer タスク & ロードマップ
 
+## 最新対応
+- [DONE] [Issue #19] VITE_DATA_MODE を import.meta.env から直接読んでモード判定するよう修正し、データモードのユニットテストを追加（2025-11-23）。
+
 ## フェーズ1: 起動確認 & 開発環境整備
 ステータス: 2025-11-22 時点でローカル確認済み（Node v20.19.5、`npm run --workspace frontend dev -- --host --port 3000`、`INTERFACE_TYPE=restapi PYTHONPATH=src uv run python -m clean_interfaces.main` で /health 応答を確認）。
 ### Task 1-1: フロントエンドの起動確認

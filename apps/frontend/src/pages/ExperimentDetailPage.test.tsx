@@ -44,8 +44,7 @@ describe('ExperimentDetailPage', () => {
                         id: 100,
                         title: '人口増加の傾向',
                         description: 'ここ5年で増加',
-                        adopted: false,
-                        dataset_id: 1
+                        adopted: false
                     }
                 ]
             })
@@ -55,9 +54,7 @@ describe('ExperimentDetailPage', () => {
                         id: 100,
                         title: '人口増加の傾向',
                         description: 'ここ5年で増加',
-                        adopted: true,
-                        dataset_id: 1,
-                        feedback_comment: 'これは採用'
+                        adopted: true
                     }
                 ]
             });
