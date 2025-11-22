@@ -45,7 +45,9 @@ function App(): JSX.Element {
                                 theme === 'dark' ? 'ライト' : 'ダーク'
                             }モードに切り替え`}
                         >
-                            <span aria-hidden>{theme === 'dark' ? '🌙' : '☀️'}</span>
+                            <span aria-hidden>
+                                {theme === 'dark' ? '🌙' : '☀️'}
+                            </span>
                             <span className="theme-toggle__label">
                                 {theme === 'dark' ? 'ダーク' : 'ライト'}モード
                             </span>

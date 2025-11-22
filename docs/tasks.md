@@ -1,6 +1,7 @@
 # city-data-analyzer タスク & ロードマップ
 
 ## 最新対応
+- [DONE] frontend ダーク/ライト切替の Prettier フォーマット崩れを修正（App.tsx, App.vitest.test.tsx, index.css を整形）（2025-11-23）。
 - [DONE] [Issue #19] VITE_DATA_MODE を import.meta.env から直接読んでモード判定するよう修正し、データモードのユニットテストを追加（2025-11-23）。
 - [DONE] frontend フォーマットエラーの修正（`src/lib/dataSource.ts` を Prettier 準拠に整形）（2025-11-23）。
 

@@ -46,6 +46,8 @@ describe('App component (Vitest)', () => {
 
         const nextTheme = document.documentElement.dataset.theme;
         expect(nextTheme).not.toBe(initialTheme);
-        expect(toggleButton.getAttribute('aria-label')).toMatch(/モードに切り替え/);
+        expect(toggleButton.getAttribute('aria-label')).toMatch(
+            /モードに切り替え/
+        );
     });
 });
