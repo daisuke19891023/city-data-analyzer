@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from __future__ import annotations
-
 from typing import Annotated, Any, TypedDict
 
 from pydantic import BaseModel, Field
@@ -91,3 +89,6 @@ class InteractiveResponse(BaseModel):
     data: list[dict[str, Any]]
     stats: dict[str, Any]
     insight: str
+    summary: str | None = None
+    analysis_id: int | None = None
+    program_version: str | None = None

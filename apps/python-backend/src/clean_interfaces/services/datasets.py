@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any, TypedDict
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
+from clean_interfaces.database import init_db
 from clean_interfaces.db_models import (
     AnalysisQuery,
     Dataset,
@@ -20,7 +21,6 @@ from clean_interfaces.db_models import (
     DatasetRecord,
     OpenDataCategory,
 )
-from clean_interfaces.database import init_db
 
 
 class ColumnMetadata(TypedDict):
@@ -42,9 +42,11 @@ class DatasetMetadata(TypedDict):
     year: int | None
     columns: list[ColumnMetadata]
 
+
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
-    from pathlib import Path
     from collections.abc import Iterable
+    from pathlib import Path
+
     from sqlalchemy.orm import Session
 
 DEFAULT_OPEN_DATA_CATEGORIES: list[tuple[str, str]] = [
@@ -102,7 +104,8 @@ class DatasetRepository:
     ) -> Dataset:
         """Fetch or create a dataset under the given category."""
         category_name = dict(DEFAULT_OPEN_DATA_CATEGORIES).get(
-            category_slug, category_slug,
+            category_slug,
+            category_slug,
         )
         category = self.ensure_category(category_slug, category_name)
         dataset = self.session.scalar(
@@ -144,7 +147,10 @@ class DatasetRepository:
         self.session.commit()
 
     def add_record(
-        self, dataset: Dataset, row_json: dict[str, Any], index_cols: dict[str, Any],
+        self,
+        dataset: Dataset,
+        row_json: dict[str, Any],
+        index_cols: dict[str, Any],
     ) -> None:
         """Insert a record if it does not already exist (idempotent)."""
         row_hash = hashlib.sha256(
@@ -163,7 +169,10 @@ class DatasetRepository:
             self.session.rollback()
 
     def add_file(
-        self, dataset: Dataset, path: str, file_type: str = "csv",
+        self,
+        dataset: Dataset,
+        path: str,
+        file_type: str = "csv",
     ) -> DatasetFile:
         """Record an imported file."""
         file_entry = DatasetFile(dataset_id=dataset.id, path=path, file_type=file_type)
@@ -183,7 +192,11 @@ class DatasetRepository:
     ) -> Dataset:
         """Load a CSV file and store dataset metadata and records."""
         dataset = self.ensure_dataset(
-            category_slug, dataset_slug, dataset_name, description, year,
+            category_slug,
+            dataset_slug,
+            dataset_name,
+            description,
+            year,
         )
         raw_rows = self._read_csv_rows(csv_path)
         inferred_columns = infer_columns(raw_rows, index_columns)
@@ -263,6 +276,7 @@ class DatasetRepository:
         result_summary: dict[str, Any],
         provider: str | None,
         model: str | None,
+        program_version: str | None = None,
     ) -> AnalysisQuery:
         """Persist an analysis query and return the stored record."""
         analysis = AnalysisQuery(
@@ -272,6 +286,7 @@ class DatasetRepository:
             result_summary=result_summary,
             provider=provider,
             model=model,
+            program_version=program_version,
         )
         self.session.add(analysis)
         self.session.commit()
@@ -293,7 +308,8 @@ def parse_value(value: str | None) -> Any:
 
 
 def infer_columns(
-    rows: Iterable[dict[str, object]], index_columns: list[str] | None = None,
+    rows: Iterable[dict[str, object]],
+    index_columns: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     """Infer column metadata (name/type/is_index) from the first batch of rows."""
     rows_list = list(rows)
@@ -335,7 +351,8 @@ def infer_columns(
 
 
 def extract_index_cols(
-    row: dict[str, object], inferred_columns: list[dict[str, Any]],
+    row: dict[str, object],
+    inferred_columns: list[dict[str, Any]],
 ) -> dict[str, object]:
     """Extract index column values from a row using inferred metadata."""
     index_values: dict[str, object] = {}

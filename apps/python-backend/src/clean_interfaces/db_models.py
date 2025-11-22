@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import (
@@ -27,7 +27,10 @@ class OpenDataCategory(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     slug: Mapped[str] = mapped_column(
-        String(100), unique=True, nullable=False, index=True,
+        String(100),
+        unique=True,
+        nullable=False,
+        index=True,
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
 
@@ -41,32 +44,47 @@ class Dataset(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     category_id: Mapped[int] = mapped_column(
-        ForeignKey("open_data_categories.id"), nullable=False,
+        ForeignKey("open_data_categories.id"),
+        nullable=False,
     )
     slug: Mapped[str] = mapped_column(
-        String(100), unique=True, nullable=False, index=True,
+        String(100),
+        unique=True,
+        nullable=False,
+        index=True,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(UTC), nullable=False,
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        nullable=False,
     )
 
     category: Mapped[OpenDataCategory] = relationship(
-        "OpenDataCategory", back_populates="datasets",
+        "OpenDataCategory",
+        back_populates="datasets",
     )
     columns: Mapped[list[DatasetColumn]] = relationship(
-        "DatasetColumn", back_populates="dataset", cascade="all, delete-orphan",
+        "DatasetColumn",
+        back_populates="dataset",
+        cascade="all, delete-orphan",
     )
     records: Mapped[list[DatasetRecord]] = relationship(
-        "DatasetRecord", back_populates="dataset", cascade="all, delete-orphan",
+        "DatasetRecord",
+        back_populates="dataset",
+        cascade="all, delete-orphan",
     )
     analyses: Mapped[list[AnalysisQuery]] = relationship(
-        "AnalysisQuery", back_populates="dataset", cascade="all, delete-orphan",
+        "AnalysisQuery",
+        back_populates="dataset",
+        cascade="all, delete-orphan",
     )
     files: Mapped[list[DatasetFile]] = relationship(
-        "DatasetFile", back_populates="dataset", cascade="all, delete-orphan",
+        "DatasetFile",
+        back_populates="dataset",
+        cascade="all, delete-orphan",
     )
 
 
@@ -98,15 +116,21 @@ class DatasetRecord(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     dataset_id: Mapped[int] = mapped_column(
-        ForeignKey("datasets.id"), nullable=False, index=True,
+        ForeignKey("datasets.id"),
+        nullable=False,
+        index=True,
     )
     row_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     index_cols: Mapped[dict[str, Any]] = mapped_column(
-        JSON, nullable=False, default=dict,
+        JSON,
+        nullable=False,
+        default=dict,
     )
     row_hash: Mapped[str] = mapped_column(String(128), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(UTC), nullable=False,
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        nullable=False,
     )
 
     dataset: Mapped[Dataset] = relationship("Dataset", back_populates="records")
@@ -119,18 +143,28 @@ class AnalysisQuery(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     dataset_id: Mapped[int] = mapped_column(
-        ForeignKey("datasets.id"), nullable=False, index=True,
+        ForeignKey("datasets.id"),
+        nullable=False,
+        index=True,
     )
     question: Mapped[str] = mapped_column(Text, nullable=False)
     query_spec: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     result_summary: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     provider: Mapped[str | None] = mapped_column(String(100), nullable=True)
     model: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    program_version: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(UTC), nullable=False,
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        nullable=False,
     )
 
     dataset: Mapped[Dataset] = relationship("Dataset", back_populates="analyses")
+    feedback: Mapped[list[InsightFeedback]] = relationship(
+        "InsightFeedback",
+        back_populates="analysis",
+        cascade="all, delete-orphan",
+    )
 
 
 class DatasetFile(Base):
@@ -140,12 +174,16 @@ class DatasetFile(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     dataset_id: Mapped[int] = mapped_column(
-        ForeignKey("datasets.id"), nullable=False, index=True,
+        ForeignKey("datasets.id"),
+        nullable=False,
+        index=True,
     )
     path: Mapped[str] = mapped_column(String(500), nullable=False)
     file_type: Mapped[str] = mapped_column(String(50), nullable=False, default="csv")
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(UTC), nullable=False,
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        nullable=False,
     )
 
     dataset: Mapped[Dataset] = relationship("Dataset", back_populates="files")
@@ -161,17 +199,25 @@ class Experiment(Base):
     dataset_ids: Mapped[list[int]] = mapped_column(JSON, nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="pending", nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(UTC), nullable=False,
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(UTC), nullable=False,
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        nullable=False,
     )
 
     jobs: Mapped[list[ExperimentJob]] = relationship(
-        "ExperimentJob", back_populates="experiment", cascade="all, delete-orphan",
+        "ExperimentJob",
+        back_populates="experiment",
+        cascade="all, delete-orphan",
     )
     insights: Mapped[list[InsightCandidate]] = relationship(
-        "InsightCandidate", back_populates="experiment", cascade="all, delete-orphan",
+        "InsightCandidate",
+        back_populates="experiment",
+        cascade="all, delete-orphan",
     )
 
 
@@ -182,7 +228,9 @@ class ExperimentJob(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     experiment_id: Mapped[int] = mapped_column(
-        ForeignKey("experiments.id"), nullable=False, index=True,
+        ForeignKey("experiments.id"),
+        nullable=False,
+        index=True,
     )
     dataset_id: Mapped[int] = mapped_column(Integer, nullable=False)
     job_type: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -191,17 +239,23 @@ class ExperimentJob(Base):
     status: Mapped[str] = mapped_column(String(50), default="pending", nullable=False)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(UTC), nullable=False,
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(UTC), nullable=False,
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        nullable=False,
     )
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     experiment: Mapped[Experiment] = relationship("Experiment", back_populates="jobs")
     insights: Mapped[list[InsightCandidate]] = relationship(
-        "InsightCandidate", back_populates="job", cascade="all, delete-orphan",
+        "InsightCandidate",
+        back_populates="job",
+        cascade="all, delete-orphan",
     )
 
 
@@ -212,7 +266,9 @@ class InsightCandidate(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     experiment_id: Mapped[int] = mapped_column(
-        ForeignKey("experiments.id"), nullable=False, index=True,
+        ForeignKey("experiments.id"),
+        nullable=False,
+        index=True,
     )
     job_id: Mapped[int | None] = mapped_column(ForeignKey("experiment_jobs.id"))
     dataset_id: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -222,17 +278,23 @@ class InsightCandidate(Base):
     adopted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     feedback_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(UTC), nullable=False,
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        nullable=False,
     )
 
     experiment: Mapped[Experiment] = relationship(
-        "Experiment", back_populates="insights",
+        "Experiment",
+        back_populates="insights",
     )
     job: Mapped[ExperimentJob | None] = relationship(
-        "ExperimentJob", back_populates="insights",
+        "ExperimentJob",
+        back_populates="insights",
     )
     feedback: Mapped[list[InsightFeedback]] = relationship(
-        "InsightFeedback", back_populates="candidate", cascade="all, delete-orphan",
+        "InsightFeedback",
+        back_populates="candidate",
+        cascade="all, delete-orphan",
     )
 
 
@@ -242,15 +304,30 @@ class InsightFeedback(Base):
     __tablename__ = "insight_feedback"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    candidate_id: Mapped[int] = mapped_column(
-        ForeignKey("insight_candidates.id"), nullable=False, index=True,
+    candidate_id: Mapped[int | None] = mapped_column(
+        ForeignKey("insight_candidates.id"),
+        nullable=True,
+        index=True,
     )
-    decision: Mapped[str] = mapped_column(String(50), nullable=False)
+    analysis_id: Mapped[int | None] = mapped_column(
+        ForeignKey("analysis_queries.id"),
+        nullable=True,
+        index=True,
+    )
+    rating: Mapped[int] = mapped_column(Integer, nullable=False)
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    target_module: Mapped[str] = mapped_column(String(100), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(UTC), nullable=False,
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        nullable=False,
     )
 
-    candidate: Mapped[InsightCandidate] = relationship(
-        "InsightCandidate", back_populates="feedback",
+    candidate: Mapped[InsightCandidate | None] = relationship(
+        "InsightCandidate",
+        back_populates="feedback",
+    )
+    analysis: Mapped[AnalysisQuery | None] = relationship(
+        "AnalysisQuery",
+        back_populates="feedback",
     )

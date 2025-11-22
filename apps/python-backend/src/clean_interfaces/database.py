@@ -18,8 +18,9 @@ from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
-    from sqlalchemy.engine import Connection, Engine
     from collections.abc import Generator
+
+    from sqlalchemy.engine import Connection, Engine
 
 Base = declarative_base()
 
@@ -50,10 +51,17 @@ def _build_engine(
             db_path.parent.mkdir(parents=True, exist_ok=True)
 
     engine = create_engine(
-        url, echo=False, future=True, connect_args=connect_args, **pool_kwargs,
+        url,
+        echo=False,
+        future=True,
+        connect_args=connect_args,
+        **pool_kwargs,
     )
     session_local: sessionmaker[Session] = sessionmaker(
-        bind=engine, autoflush=False, expire_on_commit=False, future=True,
+        bind=engine,
+        autoflush=False,
+        expire_on_commit=False,
+        future=True,
     )
     return engine, session_local
 

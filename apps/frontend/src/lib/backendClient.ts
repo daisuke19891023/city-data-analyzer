@@ -15,6 +15,8 @@ export type InteractiveAnalysisResponse = {
     insight: string;
     datasetId: string;
     fallback: boolean;
+    analysisId?: number;
+    programVersion?: string;
 };
 
 const fallbackInsight: InteractiveAnalysisResponse = {
@@ -65,13 +67,24 @@ export async function runInteractiveAnalysis(
             throw new Error(`Failed to reach backend: ${response.status}`);
         }
 
-        const json =
-            (await response.json()) as Partial<InteractiveAnalysisResponse>;
+        const json = (await response.json()) as Record<string, unknown>;
         return {
-            summary: json.summary || 'バックエンド応答を受信しました。',
-            stats: json.stats || fallbackInsight.stats,
-            insight: json.insight || json.summary || fallbackInsight.insight,
-            datasetId: json.datasetId || payload.datasetId,
+            summary:
+                (json.summary as string | undefined) ||
+                'バックエンド応答を受信しました。',
+            stats:
+                (json.stats as InteractiveAnalysisResponse['stats']) ||
+                fallbackInsight.stats,
+            insight:
+                (json.insight as string | undefined) ||
+                (json.summary as string | undefined) ||
+                fallbackInsight.insight,
+            datasetId:
+                (json.dataset_id as string | undefined) ||
+                (json.datasetId as string | undefined) ||
+                payload.datasetId,
+            analysisId: json.analysis_id as number | undefined,
+            programVersion: json.program_version as string | undefined,
             fallback: false
         };
     } catch (error) {
@@ -202,9 +215,32 @@ export async function submitInsightFeedback(
     decision: 'adopted' | 'rejected',
     comment?: string
 ): Promise<void> {
-    await safeFetch(`/insights/${candidateId}/feedback`, {
+    await submitFeedback({
+        insightId: candidateId,
+        rating: decision === 'adopted' ? 1 : -1,
+        comment,
+        targetModule: 'batch'
+    });
+}
+
+export type FeedbackPayload = {
+    insightId?: number;
+    analysisId?: number;
+    rating: -1 | 1;
+    comment?: string;
+    targetModule: 'interactive' | 'batch' | 'other';
+};
+
+export async function submitFeedback(payload: FeedbackPayload): Promise<void> {
+    await safeFetch('/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ decision, comment })
+        body: JSON.stringify({
+            insight_id: payload.insightId,
+            analysis_id: payload.analysisId,
+            rating: payload.rating,
+            comment: payload.comment,
+            target_module: payload.targetModule
+        })
     });
 }

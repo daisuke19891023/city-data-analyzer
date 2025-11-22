@@ -9,7 +9,6 @@ from pathlib import Path
 from clean_interfaces.database import configure_engine, session_scope
 from clean_interfaces.services.datasets import DatasetRepository, init_database
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -20,14 +19,18 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("category_slug", help="Category slug (e.g., population)")
     parser.add_argument(
-        "dataset_slug", help="Dataset slug (e.g., population_by_ward_2023)",
+        "dataset_slug",
+        help="Dataset slug (e.g., population_by_ward_2023)",
     )
     parser.add_argument("csv_path", type=Path, help="Path to the CSV file")
     parser.add_argument("dataset_name", help="Human-friendly dataset name")
     parser.add_argument("description", help="Dataset description")
     parser.add_argument("--year", type=int, default=None, help="Year for the dataset")
     parser.add_argument(
-        "--index", nargs="*", default=None, help="Columns to treat as index columns",
+        "--index",
+        nargs="*",
+        default=None,
+        help="Columns to treat as index columns",
     )
     parser.add_argument(
         "--database-url",

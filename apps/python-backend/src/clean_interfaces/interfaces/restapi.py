@@ -1,23 +1,26 @@
 """REST API interface implementation using FastAPI."""
 
-from datetime import datetime, UTC
-from typing import Annotated, Any
 from collections.abc import Iterator
+from datetime import UTC, datetime
+from typing import Annotated, Any
 
 import uvicorn
 import uvicorn.config
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from starlette import status
+from starlette.requests import Request
 
 from clean_interfaces.database import get_session
 from clean_interfaces.db_models import (
     Experiment,
     ExperimentJob,
     InsightCandidate,
-    InsightFeedback,
 )
 from clean_interfaces.models.api import (
     HealthResponse,
@@ -34,12 +37,14 @@ from clean_interfaces.models.experiments import (
     InsightFeedbackRequest,
     InsightsResponse,
 )
+from clean_interfaces.models.feedback import FeedbackRequest, FeedbackResponse
 from clean_interfaces.services.datasets import (
     DatasetMetadata,
     DatasetRepository,
     init_database,
 )
 from clean_interfaces.services.dspy_program import InteractiveAnalysisProgram
+from clean_interfaces.services.feedback import FeedbackService
 from clean_interfaces.services.plan_experiments import PlanExperiments
 
 from .base import BaseInterface
@@ -55,6 +60,17 @@ def get_db() -> Iterator[Session]:
 
 
 db_dep = Annotated[Session, Depends(get_db)]
+
+
+def validation_error_handler(
+    _request: Request,
+    exc: RequestValidationError,
+) -> JSONResponse:
+    """Return a JSON payload describing validation errors."""
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={"detail": jsonable_encoder(exc.errors())},
+    )
 
 
 def to_job_model(job: ExperimentJob) -> ExperimentJobModel:
@@ -107,10 +123,13 @@ class RestAPIInterface(BaseInterface):
         """Initialize the REST API interface."""
         super().__init__()
 
-        self.app = FastAPI(
+        self.app: FastAPI = FastAPI(
             title="Clean Interfaces API",
             description="A clean interface REST API implementation",
             version="1.0.0",
+            exception_handlers={
+                RequestValidationError: validation_error_handler,
+            },
         )
 
         self._setup_routes()
@@ -138,6 +157,7 @@ class RestAPIInterface(BaseInterface):
         self._setup_swagger_routes()
         self._setup_dataset_routes()
         self._setup_interactive_routes()
+        self._setup_feedback_routes()
         self._setup_experiment_routes()
 
     def _setup_root_routes(self) -> None:
@@ -272,6 +292,38 @@ class RestAPIInterface(BaseInterface):
             program = InteractiveAnalysisProgram(repo)
             return program.run(payload)
 
+    def _setup_feedback_routes(self) -> None:
+        @self.app.post(
+            "/feedback",
+            status_code=status.HTTP_201_CREATED,
+            response_model=FeedbackResponse,
+        )
+        async def submit_feedback(  # type: ignore[misc]
+            payload: FeedbackRequest,
+            db: db_dep,
+        ) -> FeedbackResponse:
+            service = FeedbackService(db)
+            try:
+                record = service.submit(payload)
+            except LookupError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=str(exc),
+                ) from exc
+            except ValueError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=str(exc),
+                ) from exc
+            return FeedbackResponse(
+                feedback_id=record.id,
+                target_module=record.target_module,
+                rating=record.rating,
+                insight_id=record.candidate_id,
+                analysis_id=record.analysis_id,
+                message="Feedback recorded",
+            )
+
     def _setup_experiment_routes(self) -> None:
         @self.app.post(
             "/experiments",
@@ -351,11 +403,15 @@ class RestAPIInterface(BaseInterface):
             experiment_id: int,
             db: db_dep,
         ) -> InsightsResponse:
-            insights = db.execute(
-                select(InsightCandidate).where(
-                    InsightCandidate.experiment_id == experiment_id,
-                ),
-            ).scalars().all()
+            insights = (
+                db.execute(
+                    select(InsightCandidate).where(
+                        InsightCandidate.experiment_id == experiment_id,
+                    ),
+                )
+                .scalars()
+                .all()
+            )
             return InsightsResponse(
                 insights=[to_candidate_model(insight) for insight in insights],
             )
@@ -375,18 +431,23 @@ class RestAPIInterface(BaseInterface):
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Not found",
                 )
-            decision = payload.decision
-            candidate.adopted = decision == "adopted"
-            candidate.feedback_comment = payload.comment
-            db.add(
-                InsightFeedback(
-                    candidate_id=candidate_id,
-                    decision=decision,
-                    comment=payload.comment,
-                    created_at=datetime.now(UTC),
-                ),
-            )
-            db.commit()
+            service = FeedbackService(db)
+            try:
+                service.submit(
+                    FeedbackRequest(
+                        insight_id=candidate_id,
+                        analysis_id=None,
+                        rating=1 if payload.decision == "adopted" else -1,
+                        comment=payload.comment,
+                        target_module="batch",
+                    ),
+                )
+            except Exception as exc:  # pragma: no cover - defensive
+                db.rollback()
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=str(exc),
+                ) from exc
             db.refresh(candidate)
             return to_candidate_model(candidate)
 

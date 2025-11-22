@@ -8,7 +8,7 @@ import { Dashboard } from '../components/dashboard/Dashboard';
 import { ChartPlaceholder } from '../components/dashboard/ChartPlaceholder';
 import type { DashboardData } from '../data/dashboardPresets';
 import { dashboardPresets, datasetOptions } from '../data/dashboardPresets';
-import { runInteractiveAnalysis } from '../lib/backendClient';
+import { runInteractiveAnalysis, submitFeedback } from '../lib/backendClient';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import {
@@ -63,6 +63,11 @@ export function InteractivePage(): JSX.Element {
         'Pythonバックエンドと接続してインサイトを取得します。'
     );
     const [lastInsight, setLastInsight] = useState('');
+    const [lastAnalysisId, setLastAnalysisId] = useState<number | undefined>();
+    const [programVersion, setProgramVersion] = useState<string | undefined>();
+    const [feedbackComment, setFeedbackComment] = useState('');
+    const [feedbackState, setFeedbackState] = useState('');
+    const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
     const [backendSummary, setBackendSummary] = useState('');
 
     const availableModels = useMemo(
@@ -131,6 +136,10 @@ export function InteractivePage(): JSX.Element {
             )
         );
         setLastInsight(analysis.insight);
+        setLastAnalysisId(analysis.analysisId);
+        setProgramVersion(analysis.programVersion);
+        setFeedbackComment('');
+        setFeedbackState('');
         setStatus(
             analysis.fallback
                 ? 'バックエンド未接続のためサンプルで更新しました。'
@@ -138,6 +147,23 @@ export function InteractivePage(): JSX.Element {
         );
         await handleSubmit(event);
         setInput('');
+    }
+
+    async function handleFeedback(rating: 1 | -1): Promise<void> {
+        if (!lastInsight) return;
+        setFeedbackSubmitting(true);
+        await submitFeedback({
+            analysisId: lastAnalysisId,
+            rating,
+            comment: feedbackComment,
+            targetModule: 'interactive'
+        });
+        setFeedbackState(
+            rating > 0
+                ? '👍 高評価を受け付けました'
+                : '👎 改善フィードバックを保存しました'
+        );
+        setFeedbackSubmitting(false);
     }
 
     return (
@@ -271,6 +297,57 @@ export function InteractivePage(): JSX.Element {
                     onRefresh={() => resetDashboard(datasetId)}
                 />
             </section>
+
+            {lastInsight ? (
+                <Card className="card">
+                    <CardHeader>
+                        <CardTitle>インサイトへのフィードバック</CardTitle>
+                        <CardDescription>
+                            最新のAI応答に対する 👍 / 👎
+                            とコメントを送信できます。
+                            {programVersion
+                                ? ` (program: ${programVersion})`
+                                : ''}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="insight-title">{lastInsight}</p>
+                        <textarea
+                            aria-label="インサイトへのコメント"
+                            className="form__textarea"
+                            rows={3}
+                            placeholder="気付いたことや改善点を記載してください"
+                            value={feedbackComment}
+                            onChange={(event) =>
+                                setFeedbackComment(event.target.value)
+                            }
+                        />
+                        <div
+                            className="insight-actions"
+                            style={{ gap: '0.5rem' }}
+                        >
+                            <Button
+                                type="button"
+                                onClick={() => void handleFeedback(1)}
+                                disabled={feedbackSubmitting}
+                            >
+                                👍 役立った
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => void handleFeedback(-1)}
+                                disabled={feedbackSubmitting}
+                            >
+                                👎 改善してほしい
+                            </Button>
+                            {feedbackState ? (
+                                <Badge variant="success">{feedbackState}</Badge>
+                            ) : null}
+                        </div>
+                    </CardContent>
+                </Card>
+            ) : null}
 
             <section aria-label="可視化の雛形" className="two-column">
                 <ChartPlaceholder

@@ -10,6 +10,7 @@ from clean_interfaces.services.datasets import DatasetRepository
 
 if TYPE_CHECKING:  # pragma: no cover - type checking imports
     from collections.abc import Mapping
+
     from sqlalchemy.orm import Session
 
     from clean_interfaces.models.dspy import (
@@ -17,6 +18,7 @@ if TYPE_CHECKING:  # pragma: no cover - type checking imports
         QueryMetricDict,
         QuerySpecDict,
     )
+
 
 class QueryValidationError(ValueError):
     """Raised when a query spec references invalid columns."""
@@ -87,7 +89,9 @@ class QueryRunner:
                 raise QueryValidationError(msg)
 
     def _ensure_columns(
-        self, frame: DataFrame, valid_columns: set[str],
+        self,
+        frame: DataFrame,
+        valid_columns: set[str],
     ) -> DataFrame:
         missing_columns: list[str] = [
             col for col in frame.columns if col not in valid_columns
@@ -97,7 +101,9 @@ class QueryRunner:
         return frame
 
     def _apply_filters(
-        self, frame: DataFrame, filters: list[QueryFilterDict],
+        self,
+        frame: DataFrame,
+        filters: list[QueryFilterDict],
     ) -> DataFrame:
         filtered: DataFrame = frame.copy()
         for filter_item in filters:
@@ -123,7 +129,9 @@ class QueryRunner:
         return filtered
 
     def _apply_group_and_metrics(
-        self, frame: DataFrame, query_spec: QuerySpecDict,
+        self,
+        frame: DataFrame,
+        query_spec: QuerySpecDict,
     ) -> DataFrame:
         group_by = query_spec.get("group_by") or []
         metrics = query_spec.get("metrics") or []
@@ -157,7 +165,8 @@ class QueryRunner:
             aggregated = grouped.size().to_frame("count")
 
         if hasattr(aggregated, "columns") and isinstance(
-            aggregated.columns, pd.MultiIndex,
+            aggregated.columns,
+            pd.MultiIndex,
         ):
             flattened: list[str] = []
             flat_index: list[object] = cast(
@@ -181,7 +190,9 @@ class QueryRunner:
         return aggregated
 
     def _apply_metrics(
-        self, frame: DataFrame, metrics: list[QueryMetricDict],
+        self,
+        frame: DataFrame,
+        metrics: list[QueryMetricDict],
     ) -> DataFrame:
         result: dict[str, Any] = {}
         agg_map = {
@@ -207,7 +218,9 @@ class QueryRunner:
         return pd.DataFrame([result])
 
     def _apply_order_and_limit(
-        self, frame: DataFrame, query_spec: QuerySpecDict,
+        self,
+        frame: DataFrame,
+        query_spec: QuerySpecDict,
     ) -> DataFrame:
         order_by = query_spec.get("order_by") or []
         if order_by:

@@ -16,8 +16,9 @@ from clean_interfaces.services.query_runner import QueryRunner
 POLL_INTERVAL_SECONDS = 3
 
 if TYPE_CHECKING:
-    from clean_interfaces.models.dspy import QuerySpecDict
     from sqlalchemy.orm import Session
+
+    from clean_interfaces.models.dspy import QuerySpecDict
 
 
 class ExperimentWorker:

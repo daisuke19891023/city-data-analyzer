@@ -113,7 +113,7 @@ export function ExperimentDetailPage(): JSX.Element {
                                         )
                                     }
                                 >
-                                    却下
+                                    👎 改善
                                 </button>
                                 <button
                                     className="button"
@@ -125,7 +125,7 @@ export function ExperimentDetailPage(): JSX.Element {
                                         )
                                     }
                                 >
-                                    採用
+                                    👍 採用
                                 </button>
                             </div>
                         </div>

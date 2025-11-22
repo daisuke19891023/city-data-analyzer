@@ -28,13 +28,16 @@ class QuerySpec:
 
     def model_dump(self) -> QuerySpecDict:
         """Return a plain dictionary representation."""
-        return cast("QuerySpecDict", {
-            "filters": self.filters,
-            "group_by": self.group_by,
-            "metrics": self.metrics,
-            "order_by": self.order_by,
-            "limit": self.limit,
-        })
+        return cast(
+            "QuerySpecDict",
+            {
+                "filters": self.filters,
+                "group_by": self.group_by,
+                "metrics": self.metrics,
+                "order_by": self.order_by,
+                "limit": self.limit,
+            },
+        )
 
 
 class RuleBasedQueryGenerator:
@@ -68,13 +71,16 @@ class RuleBasedQueryGenerator:
         )
 
     def _detect_group_by(
-        self, question: str, columns: list[ColumnMetadata],
+        self,
+        question: str,
+        columns: list[ColumnMetadata],
     ) -> list[str]:
         candidates: list[str] = []
         for column in columns:
             name = column["name"].lower()
             if re.search(r"year|年度|年", question) and re.search(
-                r"year|年度|年", name,
+                r"year|年度|年",
+                name,
             ):
                 candidates.append(column["name"])
             if re.search(r"ward|区", question) and (
@@ -84,7 +90,9 @@ class RuleBasedQueryGenerator:
         return list(dict.fromkeys(candidates))
 
     def _detect_metrics(
-        self, question: str, columns: list[ColumnMetadata],
+        self,
+        question: str,
+        columns: list[ColumnMetadata],
     ) -> list[QueryMetricDict]:
         metrics: list[QueryMetricDict] = []
         numeric_columns = [col for col in columns if col.get("data_type") == "number"]
@@ -97,7 +105,9 @@ class RuleBasedQueryGenerator:
         return metrics
 
     def _detect_filters(
-        self, question: str, columns: list[ColumnMetadata],
+        self,
+        question: str,
+        columns: list[ColumnMetadata],
     ) -> list[QueryFilterDict]:
         filters: list[QueryFilterDict] = []
         year_match = re.search(r"(20\d{2})年?", question)
@@ -115,7 +125,10 @@ class RuleBasedQueryGenerator:
         return filters
 
     def _detect_order(
-        self, question: str, group_by: list[str], metrics: list[QueryMetricDict],
+        self,
+        question: str,
+        group_by: list[str],
+        metrics: list[QueryMetricDict],
     ) -> list[QueryOrderDict]:
         if metrics:
             metric = metrics[0]
