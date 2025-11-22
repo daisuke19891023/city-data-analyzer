@@ -55,8 +55,10 @@ export const dashboardPresets: Record<string, DashboardData> = {
         datasetId: 'population-trend',
         datasetLabel: '人口・世帯動態',
         timeframe: '2024年4月〜2025年1月',
-        headline: '主要区で子育て世帯の転入超過が継続。夜間人口も緩やかに増加。',
-        statsCallout: '3ヶ月連続で30代前半の転入が増。保育・教育需要の先行指標として注視。',
+        headline:
+            '主要区で子育て世帯の転入超過が継続。夜間人口も緩やかに増加。',
+        statsCallout:
+            '3ヶ月連続で30代前半の転入が増。保育・教育需要の先行指標として注視。',
         metrics: [
             {
                 label: '転入超過率',
@@ -126,7 +128,8 @@ export const dashboardPresets: Record<string, DashboardData> = {
         datasetLabel: '交通・モビリティ',
         timeframe: '直近7日間と週次比較',
         headline: '港湾エリアで18:00-19:00に出庫が集中し渋滞度が1.3倍。',
-        statsCallout: 'イベント退場と物流搬出が重なる時間帯に信号制御と増便で緩和余地あり。',
+        statsCallout:
+            'イベント退場と物流搬出が重なる時間帯に信号制御と増便で緩和余地あり。',
         metrics: [
             {
                 label: '平均遅延率',

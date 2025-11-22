@@ -1,7 +1,11 @@
 import type { FormEvent } from 'react';
 
 export function useChat(): {
-    messages: Array<{ id?: string; role: 'assistant' | 'user'; content: string }>;
+    messages: Array<{
+        id?: string;
+        role: 'assistant' | 'user';
+        content: string;
+    }>;
     input: string;
     handleInputChange: (event: FormEvent<HTMLInputElement>) => void;
     handleSubmit: (event?: FormEvent<HTMLFormElement>) => Promise<void>;

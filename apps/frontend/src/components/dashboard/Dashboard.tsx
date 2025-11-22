@@ -1,7 +1,13 @@
 import type { DashboardData } from '../../data/dashboardPresets';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle
+} from '../ui/card';
 import { ChartPlaceholder } from './ChartPlaceholder';
 import type { MetricCardProps } from './MetricCard';
 import { MetricCard } from './MetricCard';
@@ -26,7 +32,11 @@ function InsightRow({
     );
 }
 
-export function Dashboard({ data, lastInsight, onRefresh }: DashboardProps): JSX.Element {
+export function Dashboard({
+    data,
+    lastInsight,
+    onRefresh
+}: DashboardProps): JSX.Element {
     return (
         <section aria-label="ダッシュボードビュー" className="dashboard-grid">
             <Card className="dashboard__panel dashboard__panel--hero">
@@ -39,11 +49,17 @@ export function Dashboard({ data, lastInsight, onRefresh }: DashboardProps): JSX
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="dashboard__summary">
-                    <div className="dashboard__callout">{data.statsCallout}</div>
+                    <div className="dashboard__callout">
+                        {data.statsCallout}
+                    </div>
                     <div className="dashboard__summary-actions">
                         <Badge variant="accent">リアルタイム更新</Badge>
                         <Badge variant="success">分析OK</Badge>
-                        <Button variant="secondary" size="sm" onClick={onRefresh}>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={onRefresh}
+                        >
                             KPIを再計算
                         </Button>
                     </div>
@@ -70,7 +86,9 @@ export function Dashboard({ data, lastInsight, onRefresh }: DashboardProps): JSX
             <Card className="dashboard__panel">
                 <CardHeader>
                     <CardTitle>インサイトのリスト</CardTitle>
-                    <CardDescription>AIが抽出したシグナルと推奨アクション</CardDescription>
+                    <CardDescription>
+                        AIが抽出したシグナルと推奨アクション
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <table className="list-table">
@@ -93,7 +111,9 @@ export function Dashboard({ data, lastInsight, onRefresh }: DashboardProps): JSX
             <Card className="dashboard__panel dashboard__panel--suggestions">
                 <CardHeader>
                     <CardTitle>おすすめの後続分析</CardTitle>
-                    <CardDescription>チャットに貼り付けてすぐに質問できます</CardDescription>
+                    <CardDescription>
+                        チャットに貼り付けてすぐに質問できます
+                    </CardDescription>
                 </CardHeader>
                 <CardContent className="suggestion-row">
                     {data.suggestions.map((suggestion) => (

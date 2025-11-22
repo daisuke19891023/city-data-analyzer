@@ -15,7 +15,10 @@ describe('App component (Vitest)', () => {
             screen.getByText(/都市データのダッシュボードとVercel AI SDK/)
         ).toBeInTheDocument();
         expect(
-            screen.getByRole('heading', { level: 3, name: /インタラクティブチャット/i })
+            screen.getByRole('heading', {
+                level: 3,
+                name: /インタラクティブチャット/i
+            })
         ).toBeInTheDocument();
         expect(screen.getByLabelText('データセット')).toBeInTheDocument();
         expect(screen.getByLabelText('AIへの質問')).toHaveAttribute(

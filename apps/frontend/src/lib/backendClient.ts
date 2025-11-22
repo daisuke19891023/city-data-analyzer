@@ -18,12 +18,14 @@ export type InteractiveAnalysisResponse = {
 };
 
 const fallbackInsight: InteractiveAnalysisResponse = {
-    summary: 'バックエンドの応答が利用できないため、ダッシュボードはサンプルデータで更新しました。',
+    summary:
+        'バックエンドの応答が利用できないため、ダッシュボードはサンプルデータで更新しました。',
     stats: {
         totalRecords: 12400,
         primaryMetric: 'サンプルデータで要約'
     },
-    insight: '人口推移と移動パターンをもとに、夜間ピーク前後のアクションを提案します。',
+    insight:
+        '人口推移と移動パターンをもとに、夜間ピーク前後のアクションを提案します。',
     datasetId: 'population-trend',
     fallback: true
 };
@@ -60,7 +62,8 @@ export async function runInteractiveAnalysis(
             throw new Error(`Failed to reach backend: ${response.status}`);
         }
 
-        const json = (await response.json()) as Partial<InteractiveAnalysisResponse>;
+        const json =
+            (await response.json()) as Partial<InteractiveAnalysisResponse>;
         return {
             summary: json.summary || 'バックエンド応答を受信しました。',
             stats: json.stats || fallbackInsight.stats,
@@ -70,6 +73,10 @@ export async function runInteractiveAnalysis(
         };
     } catch (error) {
         console.warn('Interactive analysis fallback', error);
-        return { ...fallbackInsight, datasetId: payload.datasetId, fallback: true };
+        return {
+            ...fallbackInsight,
+            datasetId: payload.datasetId,
+            fallback: true
+        };
     }
 }

@@ -7,14 +7,17 @@ import { ChatMessage } from './components/chat/ChatMessage';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { ChartPlaceholder } from './components/dashboard/ChartPlaceholder';
 import type { DashboardData } from './data/dashboardPresets';
-import {
-    dashboardPresets,
-    datasetOptions
-} from './data/dashboardPresets';
+import { dashboardPresets, datasetOptions } from './data/dashboardPresets';
 import { runInteractiveAnalysis } from './lib/backendClient';
 import { Badge } from './components/ui/badge';
 import { Button } from './components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle
+} from './components/ui/card';
 
 const providerOptions = [
     { value: 'openai', label: 'OpenAI' },
@@ -62,33 +65,46 @@ function App(): JSX.Element {
     const [lastInsight, setLastInsight] = useState('');
     const [backendSummary, setBackendSummary] = useState('');
 
-    const availableModels = useMemo(() => modelCandidates[provider] || [], [provider]);
+    const availableModels = useMemo(
+        () => modelCandidates[provider] || [],
+        [provider]
+    );
 
-    const { messages, input, handleInputChange, handleSubmit, isLoading, setInput } =
-        useChat({
-            api: '/api/agent/interactive',
-            streamMode: 'text',
-            body: { provider, model, datasetId },
-            initialMessages: [
-                {
-                    id: 'intro',
-                    role: 'assistant',
-                    content:
-                        'データセットを選択し、聞きたいことを送信してください。必要に応じてPythonの /dspy/interactive を呼び出します。'
-                }
-            ],
-            onFinish: (message) => {
-                setStatus('AI応答が届きました。ダッシュボードを更新しました。');
-                setLastInsight(message.content as string);
-                setDashboard(
-                    buildDashboardFromInsight(datasetId, message.content as string, backendSummary)
-                );
-            },
-            onError: () =>
-                setStatus(
-                    'AI API 呼び出しに失敗しました。サンプルデータを表示しています。'
+    const {
+        messages,
+        input,
+        handleInputChange,
+        handleSubmit,
+        isLoading,
+        setInput
+    } = useChat({
+        api: '/api/agent/interactive',
+        streamMode: 'text',
+        body: { provider, model, datasetId },
+        initialMessages: [
+            {
+                id: 'intro',
+                role: 'assistant',
+                content:
+                    'データセットを選択し、聞きたいことを送信してください。必要に応じてPythonの /dspy/interactive を呼び出します。'
+            }
+        ],
+        onFinish: (message) => {
+            setStatus('AI応答が届きました。ダッシュボードを更新しました。');
+            setLastInsight(message.content as string);
+            setDashboard(
+                buildDashboardFromInsight(
+                    datasetId,
+                    message.content as string,
+                    backendSummary
                 )
-        } satisfies UseChatOptions);
+            );
+        },
+        onError: () =>
+            setStatus(
+                'AI API 呼び出しに失敗しました。サンプルデータを表示しています。'
+            )
+    } satisfies UseChatOptions);
 
     function resetDashboard(nextDataset: string): void {
         setDashboard(dashboardPresets[nextDataset]);
@@ -107,7 +123,13 @@ function App(): JSX.Element {
             model
         });
         setBackendSummary(analysis.summary);
-        setDashboard(buildDashboardFromInsight(datasetId, analysis.insight, analysis.summary));
+        setDashboard(
+            buildDashboardFromInsight(
+                datasetId,
+                analysis.insight,
+                analysis.summary
+            )
+        );
         setLastInsight(analysis.insight);
         setStatus(
             analysis.fallback
@@ -126,8 +148,9 @@ function App(): JSX.Element {
                         <div>
                             <h1 id="app-heading">City Data Analyzer</h1>
                             <p className="hero__subtitle">
-                                都市データのダッシュボードとVercel AI SDKを組み合わせて、
-                                Pythonの /dspy/interactive から返るインサイトをストリーミング表示します。
+                                都市データのダッシュボードとVercel AI
+                                SDKを組み合わせて、 Pythonの /dspy/interactive
+                                から返るインサイトをストリーミング表示します。
                             </p>
                         </div>
                         <div className="actions-row">
@@ -135,7 +158,10 @@ function App(): JSX.Element {
                             <Button>AI提案を実行</Button>
                         </div>
                     </div>
-                    <div className="control-row" aria-label="データセットとプロバイダー選択">
+                    <div
+                        className="control-row"
+                        aria-label="データセットとプロバイダー選択"
+                    >
                         <div className="control-group">
                             <label htmlFor="dataset-select">データセット</label>
                             <select
@@ -155,7 +181,9 @@ function App(): JSX.Element {
                             </select>
                         </div>
                         <div className="control-group">
-                            <label htmlFor="provider-select">LLM Provider</label>
+                            <label htmlFor="provider-select">
+                                LLM Provider
+                            </label>
                             <select
                                 id="provider-select"
                                 value={provider}
@@ -166,7 +194,10 @@ function App(): JSX.Element {
                                 }}
                             >
                                 {providerOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
@@ -177,7 +208,9 @@ function App(): JSX.Element {
                             <select
                                 id="model-select"
                                 value={model}
-                                onChange={(event) => setModel(event.target.value)}
+                                onChange={(event) =>
+                                    setModel(event.target.value)
+                                }
                             >
                                 {availableModels.map((candidate) => (
                                     <option key={candidate} value={candidate}>
@@ -189,13 +222,17 @@ function App(): JSX.Element {
                     </div>
                 </section>
 
-                <section className="two-column" aria-label="チャットとダッシュボード">
+                <section
+                    className="two-column"
+                    aria-label="チャットとダッシュボード"
+                >
                     <Card className="chat-card">
                         <CardHeader>
                             <CardTitle>インタラクティブチャット</CardTitle>
                             <CardDescription>
-                                useChat({`{ body: { provider: '${provider}', model: '${model}' } }`}) で
-                                Pythonバックエンドをツール呼び出しします。
+                                useChat(
+                                {`{ body: { provider: '${provider}', model: '${model}' } }`}
+                                ) で Pythonバックエンドをツール呼び出しします。
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="chat-panel">
@@ -209,12 +246,20 @@ function App(): JSX.Element {
                                                 : 'user'
                                         }
                                         content={message.content}
-                                        tone={message.role === 'assistant' ? 'action' : 'neutral'}
+                                        tone={
+                                            message.role === 'assistant'
+                                                ? 'action'
+                                                : 'neutral'
+                                        }
                                     />
                                 ))}
                             </div>
                             <div className="status-row" aria-live="polite">
-                                <Badge variant={isLoading ? 'accent' : 'success'}>{status}</Badge>
+                                <Badge
+                                    variant={isLoading ? 'accent' : 'success'}
+                                >
+                                    {status}
+                                </Badge>
                             </div>
                             <form className="chat-input" onSubmit={onSubmit}>
                                 <input
@@ -230,7 +275,11 @@ function App(): JSX.Element {
                         </CardContent>
                     </Card>
 
-                    <Dashboard data={dashboard} lastInsight={lastInsight} onRefresh={() => resetDashboard(datasetId)} />
+                    <Dashboard
+                        data={dashboard}
+                        lastInsight={lastInsight}
+                        onRefresh={() => resetDashboard(datasetId)}
+                    />
                 </section>
 
                 <section aria-label="可視化の雛形" className="two-column">
@@ -248,7 +297,8 @@ function App(): JSX.Element {
 
                 <p className="footer-note">
                     フロントエンド側でチャットとダッシュボードの土台を実装し、
-                    /dspy/interactive への呼び出しは lib/backendClient.ts で共通化しました。
+                    /dspy/interactive への呼び出しは lib/backendClient.ts
+                    で共通化しました。
                 </p>
             </div>
         </div>
