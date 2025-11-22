@@ -1,170 +1,240 @@
-import type { FormEvent } from 'react';
-import { useMemo, useState } from 'react';
-import type { UseChatOptions } from 'ai/react';
-import { useChat } from 'ai/react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import '../index.css';
 import { ChatMessage } from '../components/chat/ChatMessage';
-import { Dashboard } from '../components/dashboard/Dashboard';
-import { ChartPlaceholder } from '../components/dashboard/ChartPlaceholder';
-import type { DashboardData } from '../data/dashboardPresets';
-import { dashboardPresets, datasetOptions } from '../data/dashboardPresets';
-import { runInteractiveAnalysis, submitFeedback } from '../lib/backendClient';
+import { DataChart } from '../components/visualization/DataChart';
+import { DataSummaryTable } from '../components/visualization/DataSummaryTable';
+import type { DatasetDefinition, DatasetRecord } from '../data/visualizationData';
+import { visualizationDatasetOptions } from '../data/visualizationData';
+import {
+    answerQuestionFromData,
+    applyFilters,
+    buildCategoryTable,
+    buildMonthlySeries,
+    dataMode,
+    deriveChatIntent,
+    getDatasetData,
+    getDatasetSummaries,
+    summarizeRecords,
+    type FilterState,
+    type DatasetSummary
+} from '../lib/dataSource';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle
-} from '../components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 
-const providerOptions = [
-    { value: 'openai', label: 'OpenAI' },
-    { value: 'anthropic', label: 'Anthropic' },
-    { value: 'google', label: 'Google' }
-];
-
-const modelCandidates: Record<string, string[]> = {
-    openai: ['gpt-4o-mini', 'o3-mini'],
-    anthropic: ['claude-3-5-haiku-latest'],
-    google: ['gemini-1.5-flash']
+type ChatEntry = {
+    id: string;
+    role: 'user' | 'assistant';
+    content: string;
 };
 
-function buildDashboardFromInsight(
-    datasetId: string,
-    assistantText: string,
-    summary?: string
-): DashboardData {
-    const base = dashboardPresets[datasetId];
-    const enrichedInsight = assistantText || summary;
+const timeRangeOptions: FilterState['timeRange'][] = ['6m', '12m', '24m', 'all'];
+
+function makeId(): string {
+    if (typeof globalThis.crypto !== 'undefined' && globalThis.crypto.randomUUID) {
+        return globalThis.crypto.randomUUID();
+    }
+    return Math.random().toString(36).slice(2);
+}
+
+function initialChatMessage(mode: 'dummy' | 'api'): ChatEntry {
+    const label = mode === 'api' ? 'APIモード' : 'ダミーデータモード';
     return {
-        ...base,
-        statsCallout: summary || base.statsCallout,
-        insights: [
-            {
-                title: 'AIが生成した最新の観測',
-                signal: enrichedInsight || base.headline,
-                recommendation: '提案を右側のカードから確認してください'
-            },
-            ...base.insights
-        ].slice(0, 4)
+        id: 'intro',
+        role: 'assistant',
+        content: `${label}でデータを読み込みました。データセットを選び、気になるポイントを質問してください。`
     };
 }
 
 export function InteractivePage(): JSX.Element {
-    const [datasetId, setDatasetId] = useState(datasetOptions[0].id);
-    const [provider, setProvider] = useState(providerOptions[0].value);
-    const [model, setModel] = useState(modelCandidates[provider][0]);
-    const [dashboard, setDashboard] = useState<DashboardData>(
-        dashboardPresets[datasetId]
+    const [datasetSummaries, setDatasetSummaries] = useState<DatasetSummary[]>(
+        visualizationDatasetOptions
     );
-    const [status, setStatus] = useState(
-        'Pythonバックエンドと接続してインサイトを取得します。'
-    );
-    const [lastInsight, setLastInsight] = useState('');
-    const [lastAnalysisId, setLastAnalysisId] = useState<number | undefined>();
-    const [programVersion, setProgramVersion] = useState<string | undefined>();
-    const [feedbackComment, setFeedbackComment] = useState('');
-    const [feedbackState, setFeedbackState] = useState('');
-    const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
-    const [backendSummary, setBackendSummary] = useState('');
+    const [datasetId, setDatasetId] = useState<string>(visualizationDatasetOptions[0].id);
+    const [dataset, setDataset] = useState<DatasetDefinition | null>(null);
+    const [records, setRecords] = useState<DatasetRecord[]>([]);
+    const [filters, setFilters] = useState<FilterState>({
+        timeRange: '12m',
+        category: 'all',
+        segment: 'all',
+        metric: visualizationDatasetOptions[0].defaultMetric
+    });
+    const [status, setStatus] = useState('ダッシュボードのデータを準備しています...');
+    const [chatMessages, setChatMessages] = useState<ChatEntry[]>([
+        initialChatMessage(dataMode)
+    ]);
+    const [chatInput, setChatInput] = useState('');
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
-    const availableModels = useMemo(
-        () => modelCandidates[provider] || [],
-        [provider]
-    );
+    useEffect(() => {
+        void (async () => {
+            const summaries = await getDatasetSummaries();
+            setDatasetSummaries(summaries);
+            setDatasetId((current) => current || summaries[0]?.id || 'population-trend');
+        })();
+    }, []);
 
-    const {
-        messages,
-        input,
-        handleInputChange,
-        handleSubmit,
-        isLoading,
-        setInput
-    } = useChat({
-        api: '/api/agent/interactive',
-        streamMode: 'text',
-        body: { provider, model, datasetId },
-        initialMessages: [
-            {
-                id: 'intro',
-                role: 'assistant',
-                content:
-                    'データセットを選択し、聞きたいことを送信してください。必要に応じてPythonの /dspy/interactive を呼び出します。'
+    useEffect(() => {
+        void (async () => {
+            setStatus('データセットを読み込んでいます...');
+            const data = await getDatasetData(datasetId);
+            if (!data) {
+                setStatus('データセットを読み込めませんでした');
+                return;
             }
-        ],
-        onFinish: (message) => {
-            setStatus('AI応答が届きました。ダッシュボードを更新しました。');
-            setLastInsight(message.content as string);
-            setDashboard(
-                buildDashboardFromInsight(
-                    datasetId,
-                    message.content as string,
-                    backendSummary
-                )
-            );
-        },
-        onError: () =>
-            setStatus(
-                'AI API 呼び出しに失敗しました。サンプルデータを表示しています。'
-            )
-    } satisfies UseChatOptions);
+            setDataset(data);
+            setRecords(data.records);
+            setFilters((current) => ({
+                ...current,
+                metric: data.availableMetrics.includes(current.metric)
+                    ? current.metric
+                    : data.defaultMetric,
+                category: 'all',
+                segment: 'all'
+            }));
+            setStatus(`「${data.label}」を表示中`);
+        })();
+    }, [datasetId]);
 
-    function resetDashboard(nextDataset: string): void {
-        setDashboard(dashboardPresets[nextDataset]);
-        setLastInsight('');
-    }
+    const filteredRecords = useMemo(
+        () => applyFilters(records, filters),
+        [records, filters]
+    );
+    const monthlySeries = useMemo(
+        () => buildMonthlySeries(filteredRecords),
+        [filteredRecords]
+    );
+    const tableRows = useMemo(
+        () => buildCategoryTable(filteredRecords, filters.metric),
+        [filteredRecords, filters.metric]
+    );
+    const summary = useMemo(
+        () => summarizeRecords(filteredRecords, filters.metric),
+        [filteredRecords, filters.metric]
+    );
 
-    async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
+    function handleAsk(event: FormEvent<HTMLFormElement>): void {
         event.preventDefault();
-        if (!input.trim()) return;
-
-        setStatus('Pythonバックエンドに問い合わせ中...');
-        const analysis = await runInteractiveAnalysis({
-            question: input,
-            datasetId,
-            provider,
-            model
-        });
-        setBackendSummary(analysis.summary);
-        setDashboard(
-            buildDashboardFromInsight(
-                datasetId,
-                analysis.insight,
-                analysis.summary
-            )
-        );
-        setLastInsight(analysis.insight);
-        setLastAnalysisId(analysis.analysisId);
-        setProgramVersion(analysis.programVersion);
-        setFeedbackComment('');
-        setFeedbackState('');
-        setStatus(
-            analysis.fallback
-                ? 'バックエンド未接続のためサンプルで更新しました。'
-                : 'バックエンド応答を反映しました。AIストリームを待機します。'
-        );
-        await handleSubmit(event);
-        setInput('');
+        if (!chatInput.trim() || !dataset) return;
+        const userMessage: ChatEntry = {
+            id: makeId(),
+            role: 'user',
+            content: chatInput
+        };
+        const { updatedFilters, notes } = deriveChatIntent(chatInput, dataset, filters);
+        const nextFilters = updatedFilters ? { ...filters, ...updatedFilters } : filters;
+        if (updatedFilters) {
+            setFilters(nextFilters);
+        }
+        const scopedRecords = applyFilters(dataset.records, nextFilters);
+        const answer = answerQuestionFromData(chatInput, dataset, scopedRecords);
+        const assistantMessage: ChatEntry = {
+            id: makeId(),
+            role: 'assistant',
+            content: [notes.join(' '), answer].filter(Boolean).join('\n')
+        };
+        setChatMessages((prev) => [...prev, userMessage, assistantMessage]);
+        setChatInput('');
     }
 
-    async function handleFeedback(rating: 1 | -1): Promise<void> {
-        if (!lastInsight) return;
-        setFeedbackSubmitting(true);
-        await submitFeedback({
-            analysisId: lastAnalysisId,
-            rating,
-            comment: feedbackComment,
-            targetModule: 'interactive'
-        });
-        setFeedbackState(
-            rating > 0
-                ? '👍 高評価を受け付けました'
-                : '👎 改善フィードバックを保存しました'
-        );
-        setFeedbackSubmitting(false);
-    }
+    const activeSummary = datasetSummaries.find((summary) => summary.id === datasetId);
+
+    const renderFilterControls = (className = '') => (
+        <div className={`control-row ${className}`.trim()} aria-label="データ選択とフィルター">
+            <div className="control-group">
+                <label htmlFor="dataset-select">データセット</label>
+                <select
+                    id="dataset-select"
+                    value={datasetId}
+                    onChange={(event) => setDatasetId(event.target.value)}
+                >
+                    {datasetSummaries.map((option) => (
+                        <option key={option.id} value={option.id}>
+                            {option.label} — {option.helper}
+                        </option>
+                    ))}
+                </select>
+            </div>
+            <div className="control-group">
+                <label htmlFor="metric-select">指標</label>
+                <select
+                    id="metric-select"
+                    value={filters.metric}
+                    onChange={(event) =>
+                        setFilters((current) => ({
+                            ...current,
+                            metric: event.target.value
+                        }))
+                    }
+                >
+                    {dataset?.availableMetrics?.map((metric) => (
+                        <option key={metric} value={metric}>
+                            {metric}
+                        </option>
+                    ))}
+                </select>
+            </div>
+            <div className="control-group">
+                <label htmlFor="category-select">カテゴリ</label>
+                <select
+                    id="category-select"
+                    value={filters.category}
+                    onChange={(event) =>
+                        setFilters((current) => ({
+                            ...current,
+                            category: event.target.value
+                        }))
+                    }
+                >
+                    <option value="all">すべて</option>
+                    {dataset?.categories?.map((category) => (
+                        <option key={category} value={category}>
+                            {category}
+                        </option>
+                    ))}
+                </select>
+            </div>
+            <div className="control-group">
+                <label htmlFor="segment-select">セグメント</label>
+                <select
+                    id="segment-select"
+                    value={filters.segment}
+                    onChange={(event) =>
+                        setFilters((current) => ({
+                            ...current,
+                            segment: event.target.value
+                        }))
+                    }
+                >
+                    <option value="all">すべて</option>
+                    {dataset?.segments?.map((segment) => (
+                        <option key={segment} value={segment}>
+                            {segment}
+                        </option>
+                    ))}
+                </select>
+            </div>
+            <div className="control-group">
+                <label htmlFor="timerange-select">期間</label>
+                <select
+                    id="timerange-select"
+                    value={filters.timeRange}
+                    onChange={(event) =>
+                        setFilters((current) => ({
+                            ...current,
+                            timeRange: event.target.value as FilterState['timeRange']
+                        }))
+                    }
+                >
+                    {timeRangeOptions.map((option) => (
+                        <option key={option} value={option}>
+                            {option === 'all' ? 'すべて' : option}
+                        </option>
+                    ))}
+                </select>
+            </div>
+        </div>
+    );
 
     return (
         <div className="app-container">
@@ -173,200 +243,149 @@ export function InteractivePage(): JSX.Element {
                     <div>
                         <h1 id="app-heading">City Data Analyzer</h1>
                         <p className="hero__subtitle">
-                            都市データのダッシュボードとVercel AI
-                            SDKを組み合わせて、 Pythonの /dspy/interactive
-                            から返るインサイトをストリーミング表示します。
+                            データセットの選択とフィルタリングでグラフとテーブルを即座に更新し、
+                            下部のチャットで自然言語による質問に答える可視化ビューです。
                         </p>
+                        <div className="badge-row">
+                            <Badge variant={dataMode === 'api' ? 'accent' : 'warning'}>
+                                データモード: {dataMode === 'api' ? 'API経由' : 'ダミーデータ'}
+                            </Badge>
+                            <Badge variant="success">{status}</Badge>
+                        </div>
                     </div>
                     <div className="actions-row">
-                        <Button variant="ghost">共有リンクをコピー</Button>
-                        <Button>AI提案を実行</Button>
+                        <Button
+                            className="filter-modal-trigger"
+                            variant="ghost"
+                            onClick={() => setIsFilterModalOpen(true)}
+                        >
+                            フィルターを開く
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            onClick={() =>
+                                setFilters((current) => ({
+                                    ...current,
+                                    category: 'all',
+                                    segment: 'all',
+                                    timeRange: '12m',
+                                    metric:
+                                        activeSummary?.defaultMetric ||
+                                        visualizationDatasetOptions[0].defaultMetric
+                                }))
+                            }
+                        >
+                            フィルターをリセット
+                        </Button>
+                        <Button onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}>
+                            チャットで聞く
+                        </Button>
                     </div>
                 </div>
-                <div
-                    className="control-row"
-                    aria-label="データセットとプロバイダー選択"
-                >
-                    <div className="control-group">
-                        <label htmlFor="dataset-select">データセット</label>
-                        <select
-                            id="dataset-select"
-                            value={datasetId}
-                            onChange={(event) => {
-                                const nextId = event.target.value;
-                                setDatasetId(nextId);
-                                resetDashboard(nextId);
-                            }}
-                        >
-                            {datasetOptions.map((option) => (
-                                <option key={option.id} value={option.id}>
-                                    {option.label} — {option.helper}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="control-group">
-                        <label htmlFor="provider-select">LLM Provider</label>
-                        <select
-                            id="provider-select"
-                            value={provider}
-                            onChange={(event) => {
-                                const nextProvider = event.target.value;
-                                setProvider(nextProvider);
-                                setModel(modelCandidates[nextProvider][0]);
-                            }}
-                        >
-                            {providerOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="control-group">
-                        <label htmlFor="model-select">モデル</label>
-                        <select
-                            id="model-select"
-                            value={model}
-                            onChange={(event) => setModel(event.target.value)}
-                        >
-                            {availableModels.map((candidate) => (
-                                <option key={candidate} value={candidate}>
-                                    {candidate}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
+                {renderFilterControls('control-row--inline')}
             </section>
 
-            <section
-                className="two-column"
-                aria-label="チャットとダッシュボード"
-            >
-                <Card className="chat-card">
-                    <CardHeader>
-                        <CardTitle>インタラクティブチャット</CardTitle>
-                        <CardDescription>
-                            useChat(
-                            {`{ body: { provider: '${provider}', model: '${model}' } }`}
-                            ) で Pythonバックエンドをツール呼び出しします。
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="chat-panel">
-                        <div className="chat-messages" aria-live="polite">
-                            {messages.map((message, index) => (
-                                <ChatMessage
-                                    key={`${message.id}-${index}`}
-                                    role={
-                                        message.role === 'assistant'
-                                            ? 'assistant'
-                                            : 'user'
-                                    }
-                                    content={message.content}
-                                    tone={
-                                        message.role === 'assistant'
-                                            ? 'action'
-                                            : 'neutral'
-                                    }
-                                />
-                            ))}
-                        </div>
-                        <div className="status-row" aria-live="polite">
-                            <Badge variant={isLoading ? 'accent' : 'success'}>
-                                {status}
-                            </Badge>
-                        </div>
-                        <form className="chat-input" onSubmit={onSubmit}>
-                            <input
-                                aria-label="AIへの質問"
-                                value={input}
-                                onChange={handleInputChange}
-                                placeholder="例: 人口推移と移動パターンから夜間ピークを教えて"
-                            />
-                            <Button type="submit" disabled={isLoading}>
-                                {isLoading ? '送信中...' : '送信'}
+            {isFilterModalOpen && (
+                <div className="filter-modal" role="dialog" aria-modal="true">
+                    <button
+                        type="button"
+                        className="filter-modal__backdrop"
+                        aria-label="フィルターを閉じる"
+                        onClick={() => setIsFilterModalOpen(false)}
+                    />
+                    <div className="filter-modal__body">
+                        <header className="filter-modal__header">
+                            <h2>フィルターを調整</h2>
+                            <Button size="sm" variant="ghost" onClick={() => setIsFilterModalOpen(false)}>
+                                閉じる
                             </Button>
-                        </form>
-                    </CardContent>
-                </Card>
+                        </header>
+                        {renderFilterControls('control-row--modal')}
+                    </div>
+                </div>
+            )}
 
-                <Dashboard
-                    data={dashboard}
-                    lastInsight={lastInsight}
-                    onRefresh={() => resetDashboard(datasetId)}
-                />
-            </section>
-
-            {lastInsight ? (
+            <section className="two-column" aria-label="データ可視化">
                 <Card className="card">
                     <CardHeader>
-                        <CardTitle>インサイトへのフィードバック</CardTitle>
+                        <CardTitle>グラフ</CardTitle>
                         <CardDescription>
-                            最新のAI応答に対する 👍 / 👎
-                            とコメントを送信できます。
-                            {programVersion
-                                ? ` (program: ${programVersion})`
-                                : ''}
+                            フィルター結果を月次で集計し、棒グラフで可視化しています。
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <p className="insight-title">{lastInsight}</p>
-                        <textarea
-                            aria-label="インサイトへのコメント"
-                            className="form__textarea"
-                            rows={3}
-                            placeholder="気付いたことや改善点を記載してください"
-                            value={feedbackComment}
-                            onChange={(event) =>
-                                setFeedbackComment(event.target.value)
-                            }
+                        <DataChart
+                            title={dataset?.label ?? 'データセット'}
+                            metric={filters.metric}
+                            series={monthlySeries}
+                            unit={filteredRecords[0]?.unit}
                         />
-                        <div
-                            className="insight-actions"
-                            style={{ gap: '0.5rem' }}
-                        >
-                            <Button
-                                type="button"
-                                onClick={() => void handleFeedback(1)}
-                                disabled={feedbackSubmitting}
-                            >
-                                👍 役立った
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={() => void handleFeedback(-1)}
-                                disabled={feedbackSubmitting}
-                            >
-                                👎 改善してほしい
-                            </Button>
-                            {feedbackState ? (
-                                <Badge variant="success">{feedbackState}</Badge>
-                            ) : null}
-                        </div>
                     </CardContent>
                 </Card>
-            ) : null}
 
-            <section aria-label="可視化の雛形" className="two-column">
-                <ChartPlaceholder
-                    title="実験ジョブの完了率"
-                    description="Node APIとPythonの連携結果を表示"
-                    callout="フロントエンドのみで雛形を構築し、バックエンドの応答を待ち受けます。"
-                />
-                <ChartPlaceholder
-                    title="モデル別レスポンス時間"
-                    description="プロバイダー切替時の参考情報"
-                    callout="openai/anthropic/google を同一UIで流用可能な構造"
-                />
+                <Card className="card">
+                    <CardHeader>
+                        <CardTitle>サマリー</CardTitle>
+                        <CardDescription>
+                            指標の傾向とダミーデータのハイライトを表示します。
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="summary-panel">
+                        <p className="summary-panel__headline">{summary.headline}</p>
+                        <p className="summary-panel__detail">{summary.detail}</p>
+                        <ul className="summary-panel__list">
+                            <li>
+                                データセット: {dataset?.label}
+                                {dataset?.description ? ` — ${dataset.description}` : ''}
+                            </li>
+                            <li>適用フィルター: {filters.category} / {filters.segment}</li>
+                            <li>期間: {filters.timeRange}</li>
+                        </ul>
+                    </CardContent>
+                </Card>
             </section>
 
-            <p className="footer-note">
-                フロントエンド側でチャットとダッシュボードの土台を実装し、
-                /dspy/interactive への呼び出しは lib/backendClient.ts
-                で共通化しました。
-            </p>
+            <Card className="card">
+                <CardHeader>
+                    <CardTitle>テーブル</CardTitle>
+                    <CardDescription>
+                        カテゴリとセグメント別の集計結果を表形式で確認できます。
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <DataSummaryTable rows={tableRows} metric={filters.metric} />
+                </CardContent>
+            </Card>
+
+            <Card className="chat-card">
+                <CardHeader>
+                    <CardTitle>データ質問チャット</CardTitle>
+                    <CardDescription>
+                        質問を送信すると、現在のフィルターとデータに基づいた回答を生成します。
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="chat-panel">
+                    <div className="chat-messages" aria-live="polite">
+                        {chatMessages.map((message, index) => (
+                            <ChatMessage
+                                key={`${message.id}-${index}`}
+                                role={message.role}
+                                content={message.content}
+                                tone={message.role === 'assistant' ? 'action' : 'neutral'}
+                            />
+                        ))}
+                    </div>
+                    <form className="chat-input" onSubmit={handleAsk}>
+                        <input
+                            aria-label="データに関する質問"
+                            value={chatInput}
+                            onChange={(event) => setChatInput(event.target.value)}
+                            placeholder="例: 最近6ヶ月で増えているエリアは？"
+                        />
+                        <Button type="submit">送信</Button>
+                    </form>
+                </CardContent>
+            </Card>
         </div>
     );
 }
