@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from datetime import UTC, datetime
+from typing import TypedDict
 
 import pytest
 from fastapi.testclient import TestClient
@@ -19,6 +20,13 @@ from clean_interfaces.services.dspy_program import (
     InteractiveResponse,
 )
 from clean_interfaces.services.plan_experiments import PlanExperiments
+
+
+class DatasetMeta(TypedDict):
+    """Minimal dataset metadata used in planner stub."""
+
+    id: int
+    name: str
 
 
 @pytest.fixture(autouse=True)
@@ -78,7 +86,7 @@ def stub_planner(monkeypatch: pytest.MonkeyPatch) -> None:
     def _plan(
         _self: PlanExperiments,
         _goal_description: str,
-        datasets_meta: list[dict[str, object]],
+        datasets_meta: list[DatasetMeta],
     ) -> list[PlannedJob]:
         return [
             PlannedJob(
