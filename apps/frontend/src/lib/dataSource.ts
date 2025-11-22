@@ -33,9 +33,11 @@ export type DatasetSummary = {
 
 function getImportMetaEnv(): Record<string, string | undefined> | undefined {
     if (typeof import.meta !== 'undefined') {
-        const env = (import.meta as {
-            env?: Record<string, string | undefined>;
-        }).env;
+        const env = (
+            import.meta as {
+                env?: Record<string, string | undefined>;
+            }
+        ).env;
         if (env) return env;
     }
 
