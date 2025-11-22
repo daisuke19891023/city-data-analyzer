@@ -1,0 +1,131 @@
+[
+  {
+    "question": "2023年の区別人口の平均は？",
+    "dataset_meta": {
+      "id": 1,
+      "slug": "population-trend",
+      "name": "人口推移",
+      "year": 2023,
+      "columns": [
+        {"name": "year", "data_type": "number", "description": "年度", "is_index": true},
+        {"name": "ward", "data_type": "text", "description": "行政区", "is_index": true},
+        {"name": "population", "data_type": "number", "description": "人口", "is_index": false}
+      ]
+    },
+    "query_spec": {
+      "filters": [{"column": "year", "op": "eq", "value": 2023}],
+      "group_by": ["ward"],
+      "metrics": [{"agg": "avg", "column": "population"}],
+      "order_by": [{"column": "population", "direction": "desc"}],
+      "limit": 20
+    },
+    "insight_description": "2023年の区ごとの平均人口を集計する"
+  },
+  {
+    "question": "子育て支援施設数の推移を確認したい",
+    "dataset_meta": {
+      "id": 2,
+      "slug": "childcare-support",
+      "name": "子育て支援施設",
+      "year": 2022,
+      "columns": [
+        {"name": "year", "data_type": "number", "description": "年度", "is_index": true},
+        {"name": "ward", "data_type": "text", "description": "行政区", "is_index": true},
+        {"name": "facility_count", "data_type": "number", "description": "施設数", "is_index": false}
+      ]
+    },
+    "query_spec": {
+      "filters": [],
+      "group_by": ["year"],
+      "metrics": [{"agg": "sum", "column": "facility_count"}],
+      "order_by": [{"column": "year", "direction": "asc"}],
+      "limit": null
+    },
+    "insight_description": "年度別の施設数推移を算出する"
+  },
+  {
+    "question": "交通事故件数の多い地区を教えて",
+    "dataset_meta": {
+      "id": 3,
+      "slug": "traffic-accidents",
+      "name": "交通事故件数",
+      "year": null,
+      "columns": [
+        {"name": "year", "data_type": "number", "description": "年度", "is_index": true},
+        {"name": "district", "data_type": "text", "description": "地区名", "is_index": true},
+        {"name": "accidents", "data_type": "number", "description": "件数", "is_index": false}
+      ]
+    },
+    "query_spec": {
+      "filters": [],
+      "group_by": ["district"],
+      "metrics": [{"agg": "sum", "column": "accidents"}],
+      "order_by": [{"column": "accidents", "direction": "desc"}],
+      "limit": 10
+    },
+    "insight_description": "事故件数が多い地区をランキングする"
+  },
+  {
+    "question": "高齢者人口比率が高い区はどこ？",
+    "dataset_meta": {
+      "id": 1,
+      "slug": "population-trend",
+      "name": "人口推移",
+      "year": 2023,
+      "columns": [
+        {"name": "ward", "data_type": "text", "description": "行政区", "is_index": true},
+        {"name": "elder_ratio", "data_type": "number", "description": "高齢化率", "is_index": false}
+      ]
+    },
+    "query_spec": {
+      "filters": [],
+      "group_by": ["ward"],
+      "metrics": [{"agg": "avg", "column": "elder_ratio"}],
+      "order_by": [{"column": "elder_ratio", "direction": "desc"}],
+      "limit": 5
+    },
+    "insight_description": "高齢化率の高い区を抽出する"
+  },
+  {
+    "question": "CO2排出量の減少傾向を知りたい",
+    "dataset_meta": {
+      "id": 4,
+      "slug": "environment-emission",
+      "name": "CO2排出量",
+      "year": 2021,
+      "columns": [
+        {"name": "year", "data_type": "number", "description": "年度", "is_index": true},
+        {"name": "emission", "data_type": "number", "description": "排出量", "is_index": false}
+      ]
+    },
+    "query_spec": {
+      "filters": [],
+      "group_by": ["year"],
+      "metrics": [{"agg": "avg", "column": "emission"}],
+      "order_by": [{"column": "year", "direction": "asc"}],
+      "limit": null
+    },
+    "insight_description": "年次でのCO2排出量平均を比較する"
+  },
+  {
+    "question": "各区の図書館利用者数を比較",
+    "dataset_meta": {
+      "id": 5,
+      "slug": "library-usage",
+      "name": "図書館利用",
+      "year": 2023,
+      "columns": [
+        {"name": "ward", "data_type": "text", "description": "行政区", "is_index": true},
+        {"name": "visitors", "data_type": "number", "description": "利用者数", "is_index": false}
+      ]
+    },
+    "query_spec": {
+      "filters": [],
+      "group_by": ["ward"],
+      "metrics": [{"agg": "sum", "column": "visitors"}],
+      "order_by": [{"column": "visitors", "direction": "desc"}],
+      "limit": 10
+    },
+    "insight_description": "利用者数が多い区を比較する"
+  }
+]

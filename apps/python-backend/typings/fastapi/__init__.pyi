@@ -12,7 +12,6 @@ __all__ = [
 
 _F = TypeVar("_F", bound=Callable[..., Any])
 
-
 class HTTPException(Exception):
     status_code: int
     detail: Any
@@ -25,7 +24,6 @@ class HTTPException(Exception):
         headers: dict[str, str] | None = None,
     ) -> None: ...
 
-
 class _Depends:
     dependency: Callable[..., Any] | None
     use_cache: bool
@@ -37,19 +35,16 @@ class _Depends:
         use_cache: bool = True,
     ) -> None: ...
 
-
 def Depends(
     dependency: Callable[..., Any] | None = None,
     *,
     use_cache: bool = True,
 ) -> _Depends: ...
 
-
 class _Status:
     HTTP_200_OK: int
     HTTP_201_CREATED: int
     HTTP_404_NOT_FOUND: int
-
 
 status: _Status
 
@@ -92,7 +87,6 @@ class FastAPI:
         openapi_extra: dict[str, Any] | None = None,
         generate_unique_id_function: Callable[..., str] | None = None,
     ) -> Callable[[_F], _F]: ...
-
     def post(
         self,
         path: str,
@@ -120,7 +114,6 @@ class FastAPI:
         openapi_extra: dict[str, Any] | None = None,
         generate_unique_id_function: Callable[..., str] | None = None,
     ) -> Callable[[_F], _F]: ...
-
     def on_event(self, event_type: str) -> Callable[[_F], _F]: ...
 
     routes: list[Any]

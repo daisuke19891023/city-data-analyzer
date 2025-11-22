@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from __future__ import annotations
-
-from typing import Annotated, TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 from pydantic import BaseModel, Field
 
@@ -14,6 +12,7 @@ if TYPE_CHECKING:
     from clean_interfaces.models.dspy import QuerySpecModel
 else:  # pragma: no cover - runtime types for pydantic validation
     from datetime import datetime  # noqa: TC003
+
     from clean_interfaces.models.dspy import QuerySpecModel  # noqa: TC001
 
 
@@ -22,7 +21,9 @@ class ExperimentCreateRequest(BaseModel):
 
     goal_description: str = Field(..., description="User-provided analytical goal")
     dataset_ids: list[int] = Field(
-        ..., description="Target dataset identifiers", min_length=1,
+        ...,
+        description="Target dataset identifiers",
+        min_length=1,
     )
 
 

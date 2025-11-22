@@ -8,8 +8,9 @@ Python バックエンドでは SQLAlchemy で以下のテーブルを作成し�
 - **datasets**: CSV などで取り込んだデータセットのメタ情報（カテゴリ、説明、年度など）。
 - **dataset_columns**: データセットのカラム定義。`is_index` でインデックス用途の列をマーキングします。
 - **dataset_records**: 1レコードごとの JSON 本文と `index_cols`（年度や区コードなどのインデックス列のみを抽出した JSON）。`dataset_id + row_hash` のユニーク制約で冪等に投入できます。
-- **analysis_queries**: インタラクティブ分析 API の問い合わせ履歴（question/query_spec/result_summary/provider/model）。
+- **analysis_queries**: インタラクティブ分析 API の問い合わせ履歴（question/query_spec/result_summary/provider/model）。`program_version` にどの DSPy プログラムで実行したかを保存。
 - **dataset_files**: 取り込み済みファイルのパスとファイル種別。
+- **insight_feedback**: インタラクティブ/バッチ両方のインサイトに対するフィードバック。`rating`（👍=1 / 👎=-1）、`comment`、`target_module`、`analysis_id` または `candidate_id` を保持。
 
 ## 初期カテゴリ (12件)
 

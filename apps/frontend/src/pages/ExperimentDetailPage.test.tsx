@@ -81,7 +81,7 @@ describe('ExperimentDetailPage', () => {
 
         const textarea = screen.getByPlaceholderText('コメントを入力');
         fireEvent.change(textarea, { target: { value: 'これは採用' } });
-        fireEvent.click(screen.getByRole('button', { name: '採用' }));
+        fireEvent.click(screen.getByRole('button', { name: /採用/ }));
 
         await waitFor(() => {
             expect(mockedSubmitInsightFeedback).toHaveBeenCalledWith(

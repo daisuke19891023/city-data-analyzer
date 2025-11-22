@@ -91,16 +91,19 @@
 - やること: DB に `insight_feedback` を追加し、`POST /feedback`（Python or Node のどちらかに統一）。対話/バッチのインサイトカードに 👍/👎 + コメント UI を追加。
 - AC: 任意のインサイトカードからフィードバック送信でレコードが追加。必須欠如時は 400。
 - DoD: `insight_feedback` に対する簡易集計（rating 平均など）を docs に記載。
+  - [DONE] `/feedback` エンドポイントを追加し、対話/バッチのカードから 👍/👎 とコメントを送信すると `insight_feedback` に保存されるようにした。必須欠落時は 400 を返し、docs/feedback_loop.md に集計 SQL を掲載。
 
 ### Task 5-2: DSPy Optimizer を用いた NL→DSL 初回コンパイル
 - やること: question→query_spec 正解ペアを 5〜10 件用意。`optimizer.compile()` を InteractiveAnalysisProgram に適用し、コンパイル済みプログラムを保存。`/dspy/interactive` で読み込むよう変更。`analysis_queries` に program_version を保存。
 - AC: コンパイル前後で query_spec の正解度が向上。コンパイル時に metric がログ出力。
 - DoD: 再コンパイル手順（コマンド/必要ファイル）を docs に記載。program_version 管理を実装。
+  - [DONE] サンプル trainset を用意し、`scripts/compile_interactive.py` で baseline/compiled スコアを出力・保存する導線を追加。`program_version` を `/dspy/interactive` レスポンスと `analysis_queries` に保存し、コンパイル済みファイルを優先ロードするよう変更。
 
 ### Task 5-3: フィードバック→trainset 生成スクリプト
 - やること: 高評価フィードバックから question/dataset_meta/query_spec/insight_description を含む trainset を生成するスクリプトを作成。生成 trainset で Optimizer を再実行し新しい program_version を登録。
 - AC: スクリプト実行で trainset (JSON/dict) が出力され、その trainset で Optimizer を再度回せる。
 - DoD: trainset に元の insight_id などを含め、学習に使ったフィードバックを追跡可能にする。改善サイクル（集計→学習→再コンパイル）の概要を docs に記載。
+  - [DONE] `scripts/export_feedback_trainset.py` で高評価フィードバックから trainset JSON を生成し、`feedback_id`/`analysis_id`/`insight_id` を保持。docs/feedback_loop.md に集計→学習→再コンパイルの流れを追加。
 
 ## フェーズ6: 仕上げ（簡易 E2E / ドキュメント / UX 改善）
 ### Task 6-1: ハッピーパス E2E チェック（手動）
@@ -121,3 +124,7 @@
   - ruff の TC/E501 系指摘を修正して `uv run --with nox nox -s lint` を通過
   - フロントエンドの Prettier チェックを `npm run format --workspace frontend -- --write` で解消
   - CI の frontend format ステップ（`npm run format --workspace frontend`）が通過するよう再整形を実施
+- [DONE] uv run nox & フロント lint/format 再実行 (2025-11-22)
+  - ruff/pyright の指摘を解消し、nox の lint/typing/test セッションを成功させた
+  - pip-audit は証明書検証エラー、Sphinx ビルドは既存の重複 docstring 警告で失敗することを確認
+  - `npm run --workspace apps/frontend lint` と `npm run --workspace apps/frontend format -- --write` を完了

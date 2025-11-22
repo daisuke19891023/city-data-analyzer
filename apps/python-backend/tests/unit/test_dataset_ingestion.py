@@ -16,7 +16,8 @@ def test_import_csv_and_metadata(tmp_path: Path) -> None:
     configure_engine("sqlite+pysqlite:///:memory:")
     csv_path = tmp_path / "population.csv"
     csv_path.write_text(
-        "year,ward,population\n2023,A,100\n2023,B,150\n", encoding="utf-8",
+        "year,ward,population\n2023,A,100\n2023,B,150\n",
+        encoding="utf-8",
     )
 
     with session_scope() as session:
