@@ -32,12 +32,7 @@ export type DatasetSummary = {
 };
 
 function getImportMetaEnv(): Record<string, string | undefined> | undefined {
-    // ts-jest compiles with a CommonJS module target during tests, which does
-    // not allow the `import.meta` syntax. Suppress the diagnostic here while
-    // still using the Vite-provided env object at runtime.
-    // @ts-ignore -- `import.meta` is available in the browser/Vite runtime
     if (typeof import.meta !== 'undefined') {
-        // @ts-ignore -- see above
         const env = (import.meta as {
             env?: Record<string, string | undefined>;
         }).env;
