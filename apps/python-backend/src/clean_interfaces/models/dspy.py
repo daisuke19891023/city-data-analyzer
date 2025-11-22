@@ -54,6 +54,6 @@ class InteractiveResponse(BaseModel):
     dataset_id: int
     question: str
     query_spec: QuerySpecModel
-    data: list[dict]
-    stats: dict
+    data: list[dict[str, Any]]
+    stats: dict[str, Any]
     insight: str

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import (
     JSON,
@@ -49,7 +50,7 @@ class Dataset(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False,
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
     )
 
     category: Mapped[OpenDataCategory] = relationship(
@@ -99,11 +100,13 @@ class DatasetRecord(Base):
     dataset_id: Mapped[int] = mapped_column(
         ForeignKey("datasets.id"), nullable=False, index=True,
     )
-    row_json: Mapped[dict] = mapped_column(JSON, nullable=False)
-    index_cols: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    row_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    index_cols: Mapped[dict[str, Any]] = mapped_column(
+        JSON, nullable=False, default=dict,
+    )
     row_hash: Mapped[str] = mapped_column(String(128), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False,
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
     )
 
     dataset: Mapped[Dataset] = relationship("Dataset", back_populates="records")
@@ -119,12 +122,12 @@ class AnalysisQuery(Base):
         ForeignKey("datasets.id"), nullable=False, index=True,
     )
     question: Mapped[str] = mapped_column(Text, nullable=False)
-    query_spec: Mapped[dict] = mapped_column(JSON, nullable=False)
-    result_summary: Mapped[dict] = mapped_column(JSON, nullable=False)
+    query_spec: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    result_summary: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     provider: Mapped[str | None] = mapped_column(String(100), nullable=True)
     model: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False,
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
     )
 
     dataset: Mapped[Dataset] = relationship("Dataset", back_populates="analyses")
@@ -142,7 +145,7 @@ class DatasetFile(Base):
     path: Mapped[str] = mapped_column(String(500), nullable=False)
     file_type: Mapped[str] = mapped_column(String(50), nullable=False, default="csv")
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False,
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
     )
 
     dataset: Mapped[Dataset] = relationship("Dataset", back_populates="files")
@@ -158,10 +161,10 @@ class Experiment(Base):
     dataset_ids: Mapped[list[int]] = mapped_column(JSON, nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="pending", nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False,
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False,
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
     )
 
     jobs: Mapped[list[ExperimentJob]] = relationship(
@@ -184,14 +187,14 @@ class ExperimentJob(Base):
     dataset_id: Mapped[int] = mapped_column(Integer, nullable=False)
     job_type: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    query_spec: Mapped[dict] = mapped_column(JSON, nullable=False)
+    query_spec: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="pending", nullable=False)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False,
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False,
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
     )
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -215,11 +218,11 @@ class InsightCandidate(Base):
     dataset_id: Mapped[int] = mapped_column(Integer, nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    metrics: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     adopted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     feedback_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False,
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
     )
 
     experiment: Mapped[Experiment] = relationship(
@@ -245,7 +248,7 @@ class InsightFeedback(Base):
     decision: Mapped[str] = mapped_column(String(50), nullable=False)
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False,
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
     )
 
     candidate: Mapped[InsightCandidate] = relationship(

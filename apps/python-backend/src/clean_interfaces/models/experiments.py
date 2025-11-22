@@ -2,25 +2,25 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from pydantic import BaseModel, Field, conlist
+from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
     from datetime import datetime
 
     from clean_interfaces.models.dspy import QuerySpecModel
 else:  # pragma: no cover - runtime types for pydantic validation
-    from clean_interfaces.models.dspy import QuerySpecModel  # noqa: TC001
     from datetime import datetime  # noqa: TC003
+    from clean_interfaces.models.dspy import QuerySpecModel  # noqa: TC001
 
 
 class ExperimentCreateRequest(BaseModel):
     """Request payload for creating an experiment."""
 
     goal_description: str = Field(..., description="User-provided analytical goal")
-    dataset_ids: conlist(int, min_length=1) = Field(
-        ..., description="Target dataset identifiers",
+    dataset_ids: list[int] = Field(
+        ..., description="Target dataset identifiers", min_length=1,
     )
 
 
@@ -65,7 +65,7 @@ class InsightCandidateModel(BaseModel):
     dataset_id: int
     title: str
     description: str
-    metrics: dict | None = None
+    metrics: dict[str, Any] | None = None
     adopted: bool
     feedback_comment: str | None = None
     created_at: datetime

@@ -248,10 +248,10 @@ class RestAPIInterface(BaseInterface):
         @self.app.get("/datasets")
         async def list_datasets(  # type: ignore[misc]
             db: db_dep,
-        ) -> list[dict]:
+        ) -> list[dict[str, Any]]:
             repo = DatasetRepository(db)
             datasets = repo.list_datasets()
-            return repo.get_datasets_metadata(datasets)
+            return datasets
 
     def _setup_interactive_routes(self) -> None:
         @self.app.post(

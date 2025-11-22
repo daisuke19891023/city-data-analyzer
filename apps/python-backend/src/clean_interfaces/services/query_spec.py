@@ -11,13 +11,13 @@ from typing import Any
 class QuerySpec:
     """In-memory representation of a generated query specification."""
 
-    filters: list[dict]
+    filters: list[dict[str, Any]]
     group_by: list[str]
-    metrics: list[dict]
-    order_by: list[dict]
+    metrics: list[dict[str, Any]]
+    order_by: list[dict[str, Any]]
     limit: int | None = None
 
-    def model_dump(self) -> dict:
+    def model_dump(self) -> dict[str, Any]:
         """Return a plain dictionary representation."""
         return {
             "filters": self.filters,
@@ -58,7 +58,9 @@ class RuleBasedQueryGenerator:
             limit=limit,
         )
 
-    def _detect_group_by(self, question: str, columns: list[dict]) -> list[str]:
+    def _detect_group_by(
+        self, question: str, columns: list[dict[str, Any]],
+    ) -> list[str]:
         candidates = []
         for column in columns:
             name = column["name"].lower()
@@ -72,8 +74,10 @@ class RuleBasedQueryGenerator:
                 candidates.append(column["name"])
         return list(dict.fromkeys(candidates))
 
-    def _detect_metrics(self, question: str, columns: list[dict]) -> list[dict]:
-        metrics: list[dict] = []
+    def _detect_metrics(
+        self, question: str, columns: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        metrics: list[dict[str, Any]] = []
         numeric_columns = [col for col in columns if col.get("data_type") == "number"]
         for agg, keywords in self.metric_keywords.items():
             if any(keyword in question for keyword in keywords):
@@ -83,8 +87,10 @@ class RuleBasedQueryGenerator:
             metrics.append({"agg": "count", "column": None})
         return metrics
 
-    def _detect_filters(self, question: str, columns: list[dict]) -> list[dict]:
-        filters: list[dict] = []
+    def _detect_filters(
+        self, question: str, columns: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        filters: list[dict[str, Any]] = []
         year_match = re.search(r"(20\d{2})年?", question)
         if year_match:
             year = int(year_match.group(1))
@@ -100,8 +106,8 @@ class RuleBasedQueryGenerator:
         return filters
 
     def _detect_order(
-        self, question: str, group_by: list[str], metrics: list[dict],
-    ) -> list[dict]:
+        self, question: str, group_by: list[str], metrics: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
         if metrics:
             metric = metrics[0]
             column = metric["column"] or metrics[0].get("column")

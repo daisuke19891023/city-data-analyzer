@@ -13,14 +13,13 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Engine, create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine, Connection
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from collections.abc import Generator
-    from sqlalchemy.engine import Engine
-    from sqlalchemy.orm import Session
 
 Base = declarative_base()
 
@@ -35,7 +34,7 @@ def get_database_url() -> str:
 
 def _build_engine(
     database_url: str | None = None,
-) -> tuple[Engine, sessionmaker]:
+) -> tuple[Engine, sessionmaker[Session]]:
     """Create an engine and sessionmaker for the provided URL."""
     url = database_url or get_database_url()
     connect_args: dict[str, object] = {}
@@ -53,7 +52,7 @@ def _build_engine(
     engine = create_engine(
         url, echo=False, future=True, connect_args=connect_args, **pool_kwargs,
     )
-    session_local = sessionmaker(
+    session_local: sessionmaker[Session] = sessionmaker(
         bind=engine, autoflush=False, expire_on_commit=False, future=True,
     )
     return engine, session_local
@@ -100,7 +99,7 @@ def session_scope() -> Generator[Session]:
         session.close()
 
 
-def init_db(engine: Engine | None = None) -> None:
+def init_db(engine: Engine | Connection | None = None) -> None:
     """Create tables for all models registered to the Base metadata."""
     engine_to_use = engine or get_engine()
     Base.metadata.create_all(engine_to_use)
