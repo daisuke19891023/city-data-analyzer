@@ -12,7 +12,7 @@ repos:
       # Ruff formatter - must run before ruff linter
       - id: ruff-format
         name: Format code with ruff (via nox)
-        entry: nox -s format_code --
+        entry: bash -c "cd apps/python-backend && nox -s format_code --"
         language: system
         types_or: [python, pyi]
         pass_filenames: false
@@ -20,7 +20,7 @@ repos:
       # Ruff linter
       - id: ruff-lint
         name: Lint with ruff (via nox)
-        entry: nox -s lint --
+        entry: bash -c "cd apps/python-backend && nox -s lint --"
         language: system
         types_or: [python, pyi]
         pass_filenames: false
@@ -28,12 +28,12 @@ repos:
       # Pyright type checker
       - id: pyright
         name: Type check with pyright (via nox)
-        entry: nox -s typing --
+        entry: bash -c "cd apps/python-backend && nox -s typing --"
         language: system
         types: [python]
         pass_filenames: false
         # Only run on src directory to avoid checking test files without proper context
-        files: ^src/
+        files: ^apps/python-backend/src/
 
 # Global exclusions
 exclude: |
