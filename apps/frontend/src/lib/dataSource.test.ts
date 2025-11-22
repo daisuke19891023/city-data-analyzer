@@ -20,7 +20,9 @@ describe('dataSource utilities', () => {
             category: 'all',
             segment: 'all'
         });
-        expect(filtered.every((record) => record.metric === '転入超過指数')).toBe(true);
+        expect(
+            filtered.every((record) => record.metric === '転入超過指数')
+        ).toBe(true);
         expect(filtered.length).toBeGreaterThan(0);
     });
 
@@ -46,7 +48,11 @@ describe('dataSource utilities', () => {
         });
         const summary = summarizeRecords(filtered, '夜間人口指数');
         expect(summary.headline).toContain('夜間人口指数');
-        const answer = answerQuestionFromData('夜間のピークを教えて', dataset, filtered);
+        const answer = answerQuestionFromData(
+            '夜間のピークを教えて',
+            dataset,
+            filtered
+        );
         expect(answer).toContain('夜間人口指数');
     });
 

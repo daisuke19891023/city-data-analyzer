@@ -7,9 +7,14 @@ type DataSummaryTableProps = {
     metric: string;
 };
 
-export function DataSummaryTable({ rows, metric }: DataSummaryTableProps): JSX.Element {
+export function DataSummaryTable({
+    rows,
+    metric
+}: DataSummaryTableProps): JSX.Element {
     if (!rows.length) {
-        return <p className="data-table__empty">条件に合うデータがありません。</p>;
+        return (
+            <p className="data-table__empty">条件に合うデータがありません。</p>
+        );
     }
 
     return (

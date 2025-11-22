@@ -7,7 +7,12 @@ type DataChartProps = {
     unit?: string;
 };
 
-export function DataChart({ title, metric, series, unit }: DataChartProps): JSX.Element {
+export function DataChart({
+    title,
+    metric,
+    series,
+    unit
+}: DataChartProps): JSX.Element {
     const maxValue = Math.max(...series.map((point) => point.value), 1);
     return (
         <div className="data-chart">
@@ -20,15 +25,23 @@ export function DataChart({ title, metric, series, unit }: DataChartProps): JSX.
                     時系列に集計したダミーデータを描画しています。
                 </p>
             </div>
-            <div className="data-chart__bars" role="img" aria-label={`${metric} の推移`}>
+            <div
+                className="data-chart__bars"
+                role="img"
+                aria-label={`${metric} の推移`}
+            >
                 {series.map((point) => (
                     <div key={point.label} className="data-chart__bar">
                         <div
                             className="data-chart__bar-fill"
-                            style={{ height: `${Math.max((point.value / maxValue) * 100, 8)}%` }}
+                            style={{
+                                height: `${Math.max((point.value / maxValue) * 100, 8)}%`
+                            }}
                             aria-label={`${point.label} の値 ${point.value}${unit ?? ''}`}
                         />
-                        <span className="data-chart__bar-label">{point.label}</span>
+                        <span className="data-chart__bar-label">
+                            {point.label}
+                        </span>
                     </div>
                 ))}
             </div>

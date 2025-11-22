@@ -11,7 +11,9 @@ describe('App component (Vitest)', () => {
                 name: /city data analyzer/i
             })
         ).toBeInTheDocument();
-        expect(await screen.findByText(/データセットを選び/)).toBeInTheDocument();
+        expect(
+            await screen.findByText(/データセットを選び/)
+        ).toBeInTheDocument();
         expect(
             await screen.findByRole('heading', {
                 level: 3,
@@ -19,7 +21,9 @@ describe('App component (Vitest)', () => {
             })
         ).toBeInTheDocument();
         expect(screen.getByLabelText('データセット')).toBeInTheDocument();
-        expect((await screen.findAllByText(/グラフ/)).length).toBeGreaterThan(0);
+        expect((await screen.findAllByText(/グラフ/)).length).toBeGreaterThan(
+            0
+        );
         expect(screen.getByLabelText('データに関する質問')).toHaveAttribute(
             'placeholder',
             expect.stringContaining('6ヶ月')

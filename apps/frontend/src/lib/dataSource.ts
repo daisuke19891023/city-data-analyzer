@@ -2,7 +2,10 @@ import {
     visualizationDatasetOptions,
     visualizationDatasets
 } from '../data/visualizationData';
-import type { DatasetDefinition, DatasetRecord } from '../data/visualizationData';
+import type {
+    DatasetDefinition,
+    DatasetRecord
+} from '../data/visualizationData';
 
 export type FilterState = {
     timeRange: '6m' | '12m' | '24m' | 'all';
@@ -29,8 +32,11 @@ export type DatasetSummary = {
 };
 
 function getImportMetaEnv(): Record<string, string | undefined> | undefined {
-    return (globalThis as { __IMPORT_META_ENV__?: Record<string, string | undefined> })
-        .__IMPORT_META_ENV__;
+    return (
+        globalThis as {
+            __IMPORT_META_ENV__?: Record<string, string | undefined>;
+        }
+    ).__IMPORT_META_ENV__;
 }
 
 function getEnv(key: string): string | undefined {
@@ -93,7 +99,10 @@ export async function getDatasetData(
     return visualizationDatasets[datasetId] ?? null;
 }
 
-function isWithinRange(date: Date, timeRange: FilterState['timeRange']): boolean {
+function isWithinRange(
+    date: Date,
+    timeRange: FilterState['timeRange']
+): boolean {
     if (timeRange === 'all') return true;
     const now = new Date('2025-01-15');
     const months = { '6m': 6, '12m': 12, '24m': 24 }[timeRange];
@@ -111,7 +120,8 @@ export function applyFilters(
         const inRange = isWithinRange(recordDate, filters.timeRange);
         const inCategory =
             filters.category === 'all' || record.category === filters.category;
-        const inSegment = filters.segment === 'all' || record.segment === filters.segment;
+        const inSegment =
+            filters.segment === 'all' || record.segment === filters.segment;
         const inMetric = record.metric === filters.metric;
         return inRange && inCategory && inSegment && inMetric;
     });
@@ -147,7 +157,9 @@ export function buildCategoryTable(
     return Array.from(groups.entries()).map(([key, rows]) => {
         const total = rows.reduce((sum, row) => sum + row.value, 0);
         const average = total / rows.length;
-        const latestRow = [...rows].sort((a, b) => (a.date < b.date ? 1 : -1))[0];
+        const latestRow = [...rows].sort((a, b) =>
+            a.date < b.date ? 1 : -1
+        )[0];
         return {
             key,
             total: Number(total.toFixed(2)),
@@ -170,7 +182,8 @@ export function summarizeRecords(
     }
     const values = records.map((record) => record.value);
     const average =
-        values.reduce((sum, value) => sum + value, 0) / Math.max(values.length, 1);
+        values.reduce((sum, value) => sum + value, 0) /
+        Math.max(values.length, 1);
     const latest = [...records].sort((a, b) => (a.date < b.date ? 1 : -1))[0];
     const min = Math.min(...values);
     const max = Math.max(...values);
@@ -181,7 +194,9 @@ export function summarizeRecords(
     return { headline, detail };
 }
 
-function detectTimeRange(question: string): FilterState['timeRange'] | undefined {
+function detectTimeRange(
+    question: string
+): FilterState['timeRange'] | undefined {
     const q = question.replace(/\s+/g, '');
     if (/(直近|最近)?6(か|ヶ|ケ)月|半年/.test(q)) return '6m';
     if (/(直近|最近)?1(2|２)(か|ヶ|ケ)月|1年|１年/.test(q)) return '12m';
@@ -190,7 +205,10 @@ function detectTimeRange(question: string): FilterState['timeRange'] | undefined
     return undefined;
 }
 
-function detectMetric(question: string, dataset: DatasetDefinition): string | undefined {
+function detectMetric(
+    question: string,
+    dataset: DatasetDefinition
+): string | undefined {
     return dataset.availableMetrics.find((metric) => question.includes(metric));
 }
 
@@ -201,7 +219,10 @@ function detectCategory(
     return dataset.categories.find((category) => question.includes(category));
 }
 
-function detectSegment(question: string, dataset: DatasetDefinition): string | undefined {
+function detectSegment(
+    question: string,
+    dataset: DatasetDefinition
+): string | undefined {
     return dataset.segments.find((segment) => question.includes(segment));
 }
 
@@ -237,7 +258,10 @@ export function deriveChatIntent(
         notes.push(`セグメントを「${segment}」に絞り込みました。`);
     }
 
-    return { updatedFilters: Object.keys(updates).length ? updates : undefined, notes };
+    return {
+        updatedFilters: Object.keys(updates).length ? updates : undefined,
+        notes
+    };
 }
 
 export function answerQuestionFromData(
@@ -249,13 +273,17 @@ export function answerQuestionFromData(
         return `${dataset.label} では条件に合うデータが見つかりませんでした。フィルターを調整してください。`;
     }
     const { headline, detail } = summarizeRecords(filtered, filtered[0].metric);
-    const dominantCategory = [...
-        filtered.reduce((map, record) => {
-            map.set(record.category, (map.get(record.category) ?? 0) + record.value);
-            return map;
-        }, new Map<string, number>()).entries()
-    ]
-        .sort((a, b) => (a[1] > b[1] ? -1 : 1))[0]?.[0];
+    const dominantCategory = [
+        ...filtered
+            .reduce((map, record) => {
+                map.set(
+                    record.category,
+                    (map.get(record.category) ?? 0) + record.value
+                );
+                return map;
+            }, new Map<string, number>())
+            .entries()
+    ].sort((a, b) => (a[1] > b[1] ? -1 : 1))[0]?.[0];
 
     const cue = dominantCategory
         ? `${dominantCategory}の寄与が最も大きく、質問「${question}」に対して重点領域として示しています。`

@@ -200,11 +200,11 @@ export const visualizationDatasets: Record<string, DatasetDefinition> = {
     }
 };
 
-export const visualizationDatasetOptions = Object.values(visualizationDatasets).map(
-    ({ id, label, helper, defaultMetric }) => ({
-        id,
-        label,
-        helper,
-        defaultMetric
-    })
-);
+export const visualizationDatasetOptions = Object.values(
+    visualizationDatasets
+).map(({ id, label, helper, defaultMetric }) => ({
+    id,
+    label,
+    helper,
+    defaultMetric
+}));

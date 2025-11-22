@@ -3,7 +3,10 @@ import '../index.css';
 import { ChatMessage } from '../components/chat/ChatMessage';
 import { DataChart } from '../components/visualization/DataChart';
 import { DataSummaryTable } from '../components/visualization/DataSummaryTable';
-import type { DatasetDefinition, DatasetRecord } from '../data/visualizationData';
+import type {
+    DatasetDefinition,
+    DatasetRecord
+} from '../data/visualizationData';
 import { visualizationDatasetOptions } from '../data/visualizationData';
 import {
     answerQuestionFromData,
@@ -20,7 +23,13 @@ import {
 } from '../lib/dataSource';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle
+} from '../components/ui/card';
 
 type ChatEntry = {
     id: string;
@@ -28,10 +37,18 @@ type ChatEntry = {
     content: string;
 };
 
-const timeRangeOptions: FilterState['timeRange'][] = ['6m', '12m', '24m', 'all'];
+const timeRangeOptions: FilterState['timeRange'][] = [
+    '6m',
+    '12m',
+    '24m',
+    'all'
+];
 
 function makeId(): string {
-    if (typeof globalThis.crypto !== 'undefined' && globalThis.crypto.randomUUID) {
+    if (
+        typeof globalThis.crypto !== 'undefined' &&
+        globalThis.crypto.randomUUID
+    ) {
         return globalThis.crypto.randomUUID();
     }
     return Math.random().toString(36).slice(2);
@@ -50,7 +67,9 @@ export function InteractivePage(): JSX.Element {
     const [datasetSummaries, setDatasetSummaries] = useState<DatasetSummary[]>(
         visualizationDatasetOptions
     );
-    const [datasetId, setDatasetId] = useState<string>(visualizationDatasetOptions[0].id);
+    const [datasetId, setDatasetId] = useState<string>(
+        visualizationDatasetOptions[0].id
+    );
     const [dataset, setDataset] = useState<DatasetDefinition | null>(null);
     const [records, setRecords] = useState<DatasetRecord[]>([]);
     const [filters, setFilters] = useState<FilterState>({
@@ -59,7 +78,9 @@ export function InteractivePage(): JSX.Element {
         segment: 'all',
         metric: visualizationDatasetOptions[0].defaultMetric
     });
-    const [status, setStatus] = useState('ダッシュボードのデータを準備しています...');
+    const [status, setStatus] = useState(
+        'ダッシュボードのデータを準備しています...'
+    );
     const [chatMessages, setChatMessages] = useState<ChatEntry[]>([
         initialChatMessage(dataMode)
     ]);
@@ -70,7 +91,9 @@ export function InteractivePage(): JSX.Element {
         void (async () => {
             const summaries = await getDatasetSummaries();
             setDatasetSummaries(summaries);
-            setDatasetId((current) => current || summaries[0]?.id || 'population-trend');
+            setDatasetId(
+                (current) => current || summaries[0]?.id || 'population-trend'
+            );
         })();
     }, []);
 
@@ -121,13 +144,23 @@ export function InteractivePage(): JSX.Element {
             role: 'user',
             content: chatInput
         };
-        const { updatedFilters, notes } = deriveChatIntent(chatInput, dataset, filters);
-        const nextFilters = updatedFilters ? { ...filters, ...updatedFilters } : filters;
+        const { updatedFilters, notes } = deriveChatIntent(
+            chatInput,
+            dataset,
+            filters
+        );
+        const nextFilters = updatedFilters
+            ? { ...filters, ...updatedFilters }
+            : filters;
         if (updatedFilters) {
             setFilters(nextFilters);
         }
         const scopedRecords = applyFilters(dataset.records, nextFilters);
-        const answer = answerQuestionFromData(chatInput, dataset, scopedRecords);
+        const answer = answerQuestionFromData(
+            chatInput,
+            dataset,
+            scopedRecords
+        );
         const assistantMessage: ChatEntry = {
             id: makeId(),
             role: 'assistant',
@@ -137,10 +170,15 @@ export function InteractivePage(): JSX.Element {
         setChatInput('');
     }
 
-    const activeSummary = datasetSummaries.find((summary) => summary.id === datasetId);
+    const activeSummary = datasetSummaries.find(
+        (summary) => summary.id === datasetId
+    );
 
     const renderFilterControls = (className = '') => (
-        <div className={`control-row ${className}`.trim()} aria-label="データ選択とフィルター">
+        <div
+            className={`control-row ${className}`.trim()}
+            aria-label="データ選択とフィルター"
+        >
             <div className="control-group">
                 <label htmlFor="dataset-select">データセット</label>
                 <select
@@ -222,7 +260,8 @@ export function InteractivePage(): JSX.Element {
                     onChange={(event) =>
                         setFilters((current) => ({
                             ...current,
-                            timeRange: event.target.value as FilterState['timeRange']
+                            timeRange: event.target
+                                .value as FilterState['timeRange']
                         }))
                     }
                 >
@@ -247,8 +286,15 @@ export function InteractivePage(): JSX.Element {
                             下部のチャットで自然言語による質問に答える可視化ビューです。
                         </p>
                         <div className="badge-row">
-                            <Badge variant={dataMode === 'api' ? 'accent' : 'warning'}>
-                                データモード: {dataMode === 'api' ? 'API経由' : 'ダミーデータ'}
+                            <Badge
+                                variant={
+                                    dataMode === 'api' ? 'accent' : 'warning'
+                                }
+                            >
+                                データモード:{' '}
+                                {dataMode === 'api'
+                                    ? 'API経由'
+                                    : 'ダミーデータ'}
                             </Badge>
                             <Badge variant="success">{status}</Badge>
                         </div>
@@ -271,13 +317,21 @@ export function InteractivePage(): JSX.Element {
                                     timeRange: '12m',
                                     metric:
                                         activeSummary?.defaultMetric ||
-                                        visualizationDatasetOptions[0].defaultMetric
+                                        visualizationDatasetOptions[0]
+                                            .defaultMetric
                                 }))
                             }
                         >
                             フィルターをリセット
                         </Button>
-                        <Button onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}>
+                        <Button
+                            onClick={() =>
+                                window.scrollTo({
+                                    top: document.body.scrollHeight,
+                                    behavior: 'smooth'
+                                })
+                            }
+                        >
                             チャットで聞く
                         </Button>
                     </div>
@@ -296,7 +350,11 @@ export function InteractivePage(): JSX.Element {
                     <div className="filter-modal__body">
                         <header className="filter-modal__header">
                             <h2>フィルターを調整</h2>
-                            <Button size="sm" variant="ghost" onClick={() => setIsFilterModalOpen(false)}>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setIsFilterModalOpen(false)}
+                            >
                                 閉じる
                             </Button>
                         </header>
@@ -331,14 +389,23 @@ export function InteractivePage(): JSX.Element {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="summary-panel">
-                        <p className="summary-panel__headline">{summary.headline}</p>
-                        <p className="summary-panel__detail">{summary.detail}</p>
+                        <p className="summary-panel__headline">
+                            {summary.headline}
+                        </p>
+                        <p className="summary-panel__detail">
+                            {summary.detail}
+                        </p>
                         <ul className="summary-panel__list">
                             <li>
                                 データセット: {dataset?.label}
-                                {dataset?.description ? ` — ${dataset.description}` : ''}
+                                {dataset?.description
+                                    ? ` — ${dataset.description}`
+                                    : ''}
                             </li>
-                            <li>適用フィルター: {filters.category} / {filters.segment}</li>
+                            <li>
+                                適用フィルター: {filters.category} /{' '}
+                                {filters.segment}
+                            </li>
                             <li>期間: {filters.timeRange}</li>
                         </ul>
                     </CardContent>
@@ -353,7 +420,10 @@ export function InteractivePage(): JSX.Element {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <DataSummaryTable rows={tableRows} metric={filters.metric} />
+                    <DataSummaryTable
+                        rows={tableRows}
+                        metric={filters.metric}
+                    />
                 </CardContent>
             </Card>
 
@@ -371,7 +441,11 @@ export function InteractivePage(): JSX.Element {
                                 key={`${message.id}-${index}`}
                                 role={message.role}
                                 content={message.content}
-                                tone={message.role === 'assistant' ? 'action' : 'neutral'}
+                                tone={
+                                    message.role === 'assistant'
+                                        ? 'action'
+                                        : 'neutral'
+                                }
                             />
                         ))}
                     </div>
@@ -379,7 +453,9 @@ export function InteractivePage(): JSX.Element {
                         <input
                             aria-label="データに関する質問"
                             value={chatInput}
-                            onChange={(event) => setChatInput(event.target.value)}
+                            onChange={(event) =>
+                                setChatInput(event.target.value)
+                            }
                             placeholder="例: 最近6ヶ月で増えているエリアは？"
                         />
                         <Button type="submit">送信</Button>

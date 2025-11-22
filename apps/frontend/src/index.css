@@ -334,7 +334,11 @@ body {
 
 .data-chart__bar-fill {
     width: 100%;
-    background: linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(59, 130, 246, 0.28));
+    background: linear-gradient(
+        135deg,
+        rgba(124, 58, 237, 0.3),
+        rgba(59, 130, 246, 0.28)
+    );
     border-radius: 10px 10px 4px 4px;
     border: 1px solid rgba(124, 58, 237, 0.4);
     min-height: 16px;
