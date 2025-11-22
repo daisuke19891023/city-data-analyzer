@@ -22,26 +22,31 @@
 - やること: `open_data_categories`, `datasets`, `dataset_columns`, `dataset_records`, `analysis_queries`（+ 任意で `dataset_files`）のテーブルを Alembic などで追加。川崎市オープンデータ12カテゴリを初期登録し、JSONB で柔軟な列を保持する。
 - AC: マイグレーション実行で上記テーブル作成。open_data_categories に12件が挿入済み。任意の datasets/dataset_columns への INSERT が通る。
 - DoD: `apps/python-backend/docs/` に ER 図とテーブル説明（カラム用途、index_cols の意図）を記載。
+- [DONE] `SQLAlchemy` モデルを追加し `open_data_categories/datasets/dataset_columns/dataset_records/analysis_queries/dataset_files` を作成。`init_database` で 12 カテゴリをシードし、`docs/data_schema.md` に概要と ER テキスト図を追記。
 
 ### Task 2-2: CSV取り込みスクリプト（複数形対応）
 - やること: `scripts/load_csv.py` を作成し、カテゴリ slug・dataset slug・CSV パス・データセット名・説明・年度を受け取る。存在しない場合は datasets/dataset_columns を自動登録し、dataset_records に row_json/index_cols を idempotent に投入。year/ward_code などの index 抽出ルールまたはマッピング設定を実装。
 - AC: サンプル CSV で datasets/dataset_columns/dataset_records にデータが投入され、行数が一致。index_cols に year や ward_code が格納される。
 - DoD: README または docs に使い方・引数説明・サンプル実行例・失敗時のロールバック説明を記載。
+- [DONE] `scripts/load_csv.py` を追加し、`--index`/`--year`/`--database-url` 付きで冪等に取り込めるようにした。`docs/csv_import.md` に引数、インデックス抽出ルール、ロールバック方針を記載。
 
 ### Task 2-3: DSPy NL→QuerySpec モジュールの拡張
 - やること: NL2QuerySpec を dataset_meta（dataset_columns, index_cols 説明を含む JSON）を入力に取るよう拡張。日本語カラム名をそのまま使用し、filters/group_by/metrics/order_by/limit を dataset_columns に基づいて生成。
 - AC: 任意の dataset_id に対し日本語質問から有効な query_spec JSON を生成し、存在しないカラムが含まれない。
 - DoD: 3〜5件の dataset_id と質問例に対する query_spec 出力サンプルを docs に記載。Task 2-4 でエラーにならないことを確認。
+- [DONE] `RuleBasedQueryGenerator` で年度/区などのキーワードと数値カラムを元に `filters/group_by/metrics/order_by/limit` を生成し、存在しないカラムを排除するバリデーションを実装。`docs/dspy_interactive.md` にサンプルクエリを記載。
 
 ### Task 2-4: QuerySpec 実行 & 基本統計計算の汎用化
 - やること: query_spec と dataset_id を受けて JSONB 抽出 SQL を動的生成し、filters/group_by/metrics/order_by/limit を反映。結果を DataFrame 変換し平均/最大/最小/件数などを返却。バインドパラメータで安全性を確保。
 - AC: Task 2-3 の query_spec を入力して data/summary/schema が取得できる。不正カラム/フィルタは 400 を返す。
 - DoD: 異なる2種類以上のデータセットで動作確認。SQL インジェクション対策を説明。
+- [DONE] `QueryRunner` で DataFrame 集計（フィルタ・group_by・メトリクス・order_by・limit）を実装し、無効カラム時に 400 エラー相当の例外を送出。複数データセットでのフィルタ・グループ集計をユニットテストで確認。
 
 ### Task 2-5: DSPy インタラクティブプログラム & /dspy/interactive エンドポイント
 - やること: InteractiveAnalysisProgram を NL2QuerySpec → run_query_and_stats → SummarizeInsight で再構成し、dataset_meta を渡す。FastAPI の `/dspy/interactive` に dataset_id/question/provider/model を受ける I/F を追加し、stats/query_spec/insight を返す。
 - AC: 複数データセット（人口系・施設系など）への質問で適切なインサイトと集計が返る。タイムアウトせず完了。
 - DoD: 3〜5件の質問例と dataset_id を用意し docs にリクエスト/レスポンススキーマを記載。
+- [DONE] `/dspy/interactive` を追加し、`InteractiveAnalysisProgram`（クエリ生成→実行→サマリ保存）で stats/query_spec/insight を返却。`docs/dspy_interactive.md` にリクエスト/レスポンス例と質問サンプルを追記。
 
 ## フェーズ3: Next.js フロント + Vercel AI SDK 連携
 ### Task 3-1: フロントに Vercel AI SDK を導入
