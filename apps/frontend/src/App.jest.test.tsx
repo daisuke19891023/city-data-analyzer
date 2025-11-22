@@ -2,18 +2,18 @@ import { render, screen } from '@testing-library/react';
 import App from './App';
 
 describe('App component (Jest)', () => {
-    it('shows interactive view and key controls', () => {
+    it('shows interactive view with filters and chat', async () => {
         render(<App />);
 
         expect(
-            screen.getByText(/Vercel AI SDKを組み合わせて/)
+            await screen.findByText(/フィルターをリセット/)
         ).toBeInTheDocument();
-        expect(screen.getByText(/データセット/)).toBeInTheDocument();
+        expect(screen.getByLabelText('データセット')).toBeInTheDocument();
+        expect((await screen.findAllByText(/グラフ/)).length).toBeGreaterThan(
+            0
+        );
         expect(
-            screen.getByRole('button', { name: /ai提案を実行/i })
-        ).toBeInTheDocument();
-        expect(
-            screen.getByText(/インタラクティブチャット/)
+            await screen.findByText(/データ質問チャット/)
         ).toBeInTheDocument();
     });
 });

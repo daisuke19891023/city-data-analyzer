@@ -15,5 +15,5 @@ This directory hosts the Next.js UI for the monorepo. It currently contains a mi
 
 Environment:
 - Copy the repository root `.env.example` to `.env` so the frontend can read `PY_BACKEND_URL` (e.g., http://localhost:8000).
-
-Update the placeholder content in `app/page.tsx` as you build out the frontend experience.
+- `VITE_DATA_MODE`: set to `api` to fetch visualization data from the backend. Defaults to `dummy` for the built-in sample datasets.
+- `VITE_DATA_API_BASE`: optional base URL for dataset APIs (defaults to `PY_BACKEND_URL`).

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import App from './App';
 
 describe('App component (Vitest)', () => {
-    it('renders hero, dataset controls, and chat entry point', () => {
+    it('renders dataset controls, chart, and chat entry point', async () => {
         render(<App />);
 
         expect(
@@ -12,18 +12,21 @@ describe('App component (Vitest)', () => {
             })
         ).toBeInTheDocument();
         expect(
-            screen.getByText(/都市データのダッシュボードとVercel AI SDK/)
+            await screen.findByText(/データセットを選び/)
         ).toBeInTheDocument();
         expect(
-            screen.getByRole('heading', {
+            await screen.findByRole('heading', {
                 level: 3,
-                name: /インタラクティブチャット/i
+                name: /データ質問チャット/i
             })
         ).toBeInTheDocument();
         expect(screen.getByLabelText('データセット')).toBeInTheDocument();
-        expect(screen.getByLabelText('AIへの質問')).toHaveAttribute(
+        expect((await screen.findAllByText(/グラフ/)).length).toBeGreaterThan(
+            0
+        );
+        expect(screen.getByLabelText('データに関する質問')).toHaveAttribute(
             'placeholder',
-            expect.stringContaining('夜間ピーク')
+            expect.stringContaining('6ヶ月')
         );
     });
 });
