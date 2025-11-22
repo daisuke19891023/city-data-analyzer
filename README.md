@@ -36,3 +36,8 @@ apps/
 ## Tooling notes
 - CI and pre-commit hooks now target the backend from its new location.
 - Node and Python artifacts (e.g., `node_modules`, `.venv`) are ignored in nested app directories for cleaner monorepo workflows.
+
+## Known limitations / TODO
+- 対話モードのフロント `datasetOptions` はダミー ID なので、実データを使う場合は `apps/frontend/src/data/dashboardPresets.ts` で `dataset_id`（例: `"1"` や `"2"`）に置き換えてから起動してください。
+- `uv run nox -s pip-audit` は証明書検証エラーで失敗します。`pip-audit --skip-editable --path` での回避またはネットワーク設定の見直しが必要です。
+- Sphinx ビルドには既存の重複 docstring 警告が残っており、`nox -s docs` が失敗する場合があります。ドキュメント修正時は警告解消を併せて検討してください。
