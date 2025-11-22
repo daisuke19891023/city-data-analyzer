@@ -89,6 +89,20 @@ INTERFACE_TYPE=restapi PYTHONPATH=src uv run python -m clean_interfaces.main
 curl http://localhost:8000/health
 ```
 
+### Batch exploration worker
+
+新しいバッチ探索モードでは、バックグラウンドでジョブを処理するワーカーを起動します。
+
+```bash
+# マイグレーション（SQLite）の適用例
+sqlite3 data/city_data.db < migrations/202501010000_add_experiments.sql
+
+# ワーカー起動
+PYTHONPATH=src uv run python -m clean_interfaces.worker
+```
+
+`POST /experiments` で作成された `pending` ジョブを1件ずつ処理し、結果を `insight_candidates` として保存します。
+
 For the CLI interface (default):
 
 ```bash

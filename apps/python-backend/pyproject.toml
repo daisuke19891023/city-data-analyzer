@@ -52,6 +52,7 @@ dev = [
 [tool.uv]
 # Development dependencies are now in [project.optional-dependencies.dev]
 # Use 'uv pip install -e .[dev]' or 'uv sync --extra dev' to install them
+package = true
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.

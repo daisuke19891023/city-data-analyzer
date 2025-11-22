@@ -146,3 +146,104 @@ class DatasetFile(Base):
     )
 
     dataset: Mapped[Dataset] = relationship("Dataset", back_populates="files")
+
+
+class Experiment(Base):
+    """Experiment representing a batch exploration goal."""
+
+    __tablename__ = "experiments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    goal_description: Mapped[str] = mapped_column(Text, nullable=False)
+    dataset_ids: Mapped[list[int]] = mapped_column(JSON, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="pending", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False,
+    )
+
+    jobs: Mapped[list[ExperimentJob]] = relationship(
+        "ExperimentJob", back_populates="experiment", cascade="all, delete-orphan",
+    )
+    insights: Mapped[list[InsightCandidate]] = relationship(
+        "InsightCandidate", back_populates="experiment", cascade="all, delete-orphan",
+    )
+
+
+class ExperimentJob(Base):
+    """Job planned under an experiment."""
+
+    __tablename__ = "experiment_jobs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    experiment_id: Mapped[int] = mapped_column(
+        ForeignKey("experiments.id"), nullable=False, index=True,
+    )
+    dataset_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    job_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    query_spec: Mapped[dict] = mapped_column(JSON, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="pending", nullable=False)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False,
+    )
+    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    experiment: Mapped[Experiment] = relationship("Experiment", back_populates="jobs")
+    insights: Mapped[list[InsightCandidate]] = relationship(
+        "InsightCandidate", back_populates="job", cascade="all, delete-orphan",
+    )
+
+
+class InsightCandidate(Base):
+    """Insight candidate generated from experiment jobs."""
+
+    __tablename__ = "insight_candidates"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    experiment_id: Mapped[int] = mapped_column(
+        ForeignKey("experiments.id"), nullable=False, index=True,
+    )
+    job_id: Mapped[int | None] = mapped_column(ForeignKey("experiment_jobs.id"))
+    dataset_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    adopted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    feedback_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False,
+    )
+
+    experiment: Mapped[Experiment] = relationship("Experiment", back_populates="insights")
+    job: Mapped[ExperimentJob | None] = relationship("ExperimentJob", back_populates="insights")
+    feedback: Mapped[list[InsightFeedback]] = relationship(
+        "InsightFeedback", back_populates="candidate", cascade="all, delete-orphan",
+    )
+
+
+class InsightFeedback(Base):
+    """Feedback log for an insight candidate."""
+
+    __tablename__ = "insight_feedback"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    candidate_id: Mapped[int] = mapped_column(
+        ForeignKey("insight_candidates.id"), nullable=False, index=True,
+    )
+    decision: Mapped[str] = mapped_column(String(50), nullable=False)
+    comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False,
+    )
+
+    candidate: Mapped[InsightCandidate] = relationship(
+        "InsightCandidate", back_populates="feedback",
+    )

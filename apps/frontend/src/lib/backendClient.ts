@@ -30,22 +30,22 @@ const fallbackInsight: InteractiveAnalysisResponse = {
     fallback: true
 };
 
-function resolveBackendUrl(): string {
-    const base =
+function resolveBackendBase(): string {
+    return (
         (globalThis as { VITE_PY_BACKEND_URL?: string }).VITE_PY_BACKEND_URL ||
         (globalThis as { __PY_BACKEND_URL__?: string }).__PY_BACKEND_URL__ ||
         (typeof process !== 'undefined'
             ? process.env.VITE_PY_BACKEND_URL || process.env.PY_BACKEND_URL
             : undefined) ||
-        'http://localhost:8000';
-    return `${base.replace(/\/$/, '')}/dspy/interactive`;
+        'http://localhost:8000'
+    ).replace(/\/$/, '');
 }
 
 export async function runInteractiveAnalysis(
     payload: InteractiveAnalysisRequest
 ): Promise<InteractiveAnalysisResponse> {
     try {
-        const response = await fetch(resolveBackendUrl(), {
+        const response = await fetch(`${resolveBackendBase()}/dspy/interactive`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -79,4 +79,102 @@ export async function runInteractiveAnalysis(
             fallback: true
         };
     }
+}
+
+async function safeFetch<T>(
+    path: string,
+    options?: Parameters<typeof fetch>[1]
+): Promise<T | null> {
+    try {
+        const response = await fetch(`${resolveBackendBase()}${path}`, options);
+        if (!response.ok) return null;
+        return (await response.json()) as T;
+    } catch (error) {
+        console.warn('Backend fetch failed', path, error);
+        return null;
+    }
+}
+
+export async function fetchDatasets(): Promise<
+    { id: number; name: string; description?: string | null; year?: number | null }[]
+> {
+    const data = await safeFetch<
+        { id: number; name: string; description?: string | null; year?: number | null }[]
+    >('/datasets');
+    return (
+        data || [
+            { id: 1, name: '人口推移 (サンプル)', description: 'Fallback dataset', year: 2023 },
+            { id: 2, name: '子育て支援 (サンプル)', description: 'Fallback dataset', year: 2022 }
+        ]
+    );
+}
+
+export async function createExperiment(
+    goalDescription: string,
+    datasetIds: number[]
+): Promise<number | null> {
+    const response = await safeFetch<{ experiment_id: number }>(
+        '/experiments',
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                goal_description: goalDescription,
+                dataset_ids: datasetIds
+            })
+        }
+    );
+    return response?.experiment_id ?? null;
+}
+
+export async function listExperiments(): Promise<
+    { id: number; goal_description: string; status: string; dataset_ids: number[] }[]
+> {
+    return (
+        (await safeFetch<
+            { id: number; goal_description: string; status: string; dataset_ids: number[] }[]
+        >('/experiments')) || []
+    );
+}
+
+export async function fetchExperimentDetail(
+    experimentId: number
+): Promise<
+    | {
+          id: number;
+          goal_description: string;
+          status: string;
+          dataset_ids: number[];
+          jobs: Array<{
+              id: number;
+              dataset_id: number;
+              job_type: string;
+              status: string;
+              description?: string | null;
+          }>;
+      }
+    | null
+> {
+    return await safeFetch(`/experiments/${experimentId}`);
+}
+
+export async function fetchInsightCandidates(
+    experimentId: number
+): Promise<
+    { insights: Array<{ id: number; title: string; description: string; adopted: boolean }> }
+    | null
+> {
+    return await safeFetch(`/experiments/${experimentId}/insights`);
+}
+
+export async function submitInsightFeedback(
+    candidateId: number,
+    decision: 'adopted' | 'rejected',
+    comment?: string
+): Promise<void> {
+    await safeFetch(`/insights/${candidateId}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision, comment })
+    });
 }
