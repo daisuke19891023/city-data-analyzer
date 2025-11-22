@@ -42,7 +42,7 @@ charset-normalizer==3.4.3
     # via
     #   commitizen
     #   requests
-click==8.3.0
+click==8.1.7
     # via
     #   click-option-group
     #   hatch
@@ -243,7 +243,7 @@ pexpect==4.9.0
     # via
     #   clean-interfaces (pyproject.toml)
     #   hatch
-pip==25.2
+pip==25.3
     # via pip-api
 pip-api==0.0.34
     # via pip-audit
@@ -467,7 +467,7 @@ watchdog==6.0.0
     # via mkdocs
 wcwidth==0.2.13
     # via prompt-toolkit
-wrapt==2.0.0
+wrapt==1.16.0
     # via deprecated
 zstandard==0.24.0
     # via hatch

@@ -38,7 +38,7 @@ charset-normalizer==3.4.2
     # via
     #   commitizen
     #   requests
-click==8.3.0
+click==8.1.7
     # via
     #   click-option-group
     #   hatch
@@ -273,7 +273,7 @@ pdm==2.25.4
     # via testproject (pyproject.toml)
 pexpect==4.9.0
     # via hatch
-pip==25.1.1
+pip==25.3
     # via pip-api
 pip-api==0.0.34
     # via pip-audit
@@ -493,7 +493,7 @@ wcwidth==0.2.13
     # via prompt-toolkit
 wheel==0.45.1
     # via scalene
-wrapt==2.0.0
+wrapt==1.16.0
     # via
     #   deprecated
     #   opentelemetry-instrumentation
