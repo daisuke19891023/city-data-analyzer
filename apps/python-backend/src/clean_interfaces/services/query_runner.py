@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Mapping, cast
 
 import pandas as pd
 
+from clean_interfaces.models.dspy import QueryFilterDict, QueryMetricDict, QuerySpecDict
 from clean_interfaces.services.datasets import DatasetRepository
 
 if TYPE_CHECKING:  # pragma: no cover - type checking imports
@@ -15,6 +16,9 @@ class QueryValidationError(ValueError):
     """Raised when a query spec references invalid columns."""
 
 
+DataFrame = Any
+
+
 class QueryRunner:
     """Run QuerySpecs on stored dataset records."""
 
@@ -22,28 +26,29 @@ class QueryRunner:
         """Initialize the runner with a dataset repository."""
         self.repo = DatasetRepository(session)
 
-    def run(self, dataset_id: int, query_spec: dict[str, Any]) -> dict[str, Any]:
+    def run(self, dataset_id: int, query_spec: Mapping[str, Any]) -> dict[str, Any]:
         """Execute the provided query spec and return data, summary, and schema."""
+        spec_dict = cast(QuerySpecDict, dict(query_spec))
         dataset_meta = self.repo.get_dataset_metadata(dataset_id)
         valid_columns = {col["name"] for col in dataset_meta["columns"]}
-        self._validate(query_spec, valid_columns)
+        self._validate(spec_dict, valid_columns)
 
         records = self.repo.get_records(dataset_id)
-        frame = pd.DataFrame(records)
-        frame = self._apply_filters(frame, query_spec.get("filters", []))
+        frame: DataFrame = pd.DataFrame(records)
+        frame = self._apply_filters(frame, spec_dict.get("filters", []))
         frame = self._ensure_columns(frame, valid_columns)
 
-        result_frame = self._apply_group_and_metrics(frame, query_spec)
-        result_frame = self._apply_order_and_limit(result_frame, query_spec)
+        result_frame = self._apply_group_and_metrics(frame, spec_dict)
+        result_frame = self._apply_order_and_limit(result_frame, spec_dict)
 
-        summary = self._build_summary(frame, result_frame, query_spec)
+        summary = self._build_summary(frame, result_frame, spec_dict)
         return {
-            "data": result_frame.to_dict(orient="records"),
+            "data": cast(list[dict[str, Any]], result_frame.to_dict(orient="records")),
             "summary": summary,
             "schema": dataset_meta["columns"],
         }
 
-    def _validate(self, query_spec: dict[str, Any], valid_columns: set[str]) -> None:
+    def _validate(self, query_spec: QuerySpecDict, valid_columns: set[str]) -> None:
         for filter_item in query_spec.get("filters", []) or []:
             column = filter_item.get("column")
             if column and column not in valid_columns:
@@ -73,15 +78,19 @@ class QueryRunner:
                 raise QueryValidationError(msg)
 
     def _ensure_columns(
-        self, frame: pd.DataFrame, valid_columns: set[str],
-    ) -> pd.DataFrame:
-        missing_columns = [col for col in frame.columns if col not in valid_columns]
+        self, frame: DataFrame, valid_columns: set[str],
+    ) -> DataFrame:
+        missing_columns: list[str] = [
+            col for col in frame.columns if col not in valid_columns
+        ]
         if missing_columns:
-            frame = frame.drop(columns=missing_columns)
+            frame = cast(pd.DataFrame, frame.drop(columns=missing_columns))
         return frame
 
-    def _apply_filters(self, frame: pd.DataFrame, filters: list[dict]) -> pd.DataFrame:
-        filtered = frame.copy()
+    def _apply_filters(
+        self, frame: DataFrame, filters: list[QueryFilterDict],
+    ) -> DataFrame:
+        filtered: DataFrame = frame.copy()
         for filter_item in filters:
             column = filter_item.get("column")
             op = filter_item.get("op", "eq")
@@ -105,8 +114,8 @@ class QueryRunner:
         return filtered
 
     def _apply_group_and_metrics(
-        self, frame: pd.DataFrame, query_spec: dict[str, Any],
-    ) -> pd.DataFrame:
+        self, frame: DataFrame, query_spec: QuerySpecDict,
+    ) -> DataFrame:
         group_by = query_spec.get("group_by") or []
         metrics = query_spec.get("metrics") or []
 
@@ -141,14 +150,17 @@ class QueryRunner:
         if hasattr(aggregated, "columns") and isinstance(
             aggregated.columns, pd.MultiIndex,
         ):
-            aggregated.columns = [
-                "_".join(
-                    filter(
-                        None, [col if isinstance(col, str) else col[0] for col in cols],
-                    ),
-                )
-                for cols in aggregated.columns.to_flat_index()
-            ]
+            flattened: list[str] = []
+            flat_index: list[object] = cast(list[object], aggregated.columns.to_flat_index())
+            for raw_cols_obj in flat_index:
+                raw_cols: object = raw_cols_obj
+                cols: tuple[str, ...] | str = cast(tuple[str, ...] | str, raw_cols)
+                if isinstance(cols, tuple):
+                    parts: list[str] = [str(part) for part in cols if part]
+                else:
+                    parts = [str(cols)]
+                flattened.append("_".join(parts))
+            aggregated.columns = flattened
 
         aggregated = aggregated.reset_index()
 
@@ -156,7 +168,9 @@ class QueryRunner:
             aggregated["count"] = grouped.size().to_numpy()
         return aggregated
 
-    def _apply_metrics(self, frame: pd.DataFrame, metrics: list[dict]) -> pd.DataFrame:
+    def _apply_metrics(
+        self, frame: DataFrame, metrics: list[QueryMetricDict],
+    ) -> DataFrame:
         result: dict[str, Any] = {}
         agg_map = {
             "avg": "mean",
@@ -181,8 +195,8 @@ class QueryRunner:
         return pd.DataFrame([result])
 
     def _apply_order_and_limit(
-        self, frame: pd.DataFrame, query_spec: dict[str, Any],
-    ) -> pd.DataFrame:
+        self, frame: DataFrame, query_spec: QuerySpecDict,
+    ) -> DataFrame:
         order_by = query_spec.get("order_by") or []
         if order_by:
             resolved_columns: list[str] = []
@@ -212,9 +226,9 @@ class QueryRunner:
 
     def _build_summary(
         self,
-        source_frame: pd.DataFrame,
-        result_frame: pd.DataFrame,
-        query_spec: dict[str, Any],
+        source_frame: DataFrame,
+        result_frame: DataFrame,
+        query_spec: QuerySpecDict,
     ) -> dict[str, Any]:
         return {
             "requested_rows": len(source_frame),

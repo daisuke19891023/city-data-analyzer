@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from __future__ import annotations
+
+from typing import Annotated, TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
 
@@ -53,7 +55,7 @@ class ExperimentModel(BaseModel):
     status: str
     created_at: datetime
     updated_at: datetime
-    jobs: list[ExperimentJobModel] = Field(default_factory=list)
+    jobs: Annotated[list[ExperimentJobModel], Field(default_factory=list)]
 
 
 class InsightCandidateModel(BaseModel):

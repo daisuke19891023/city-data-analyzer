@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from __future__ import annotations
+
+from typing import Annotated, Any, TypedDict
 
 from pydantic import BaseModel, Field
 
@@ -29,13 +31,45 @@ class QueryOrder(BaseModel):
     direction: str = Field(default="asc")
 
 
+class QueryFilterDict(TypedDict):
+    """Dict representation of a query filter."""
+
+    column: str
+    op: str
+    value: Any
+
+
+class QueryMetricDict(TypedDict):
+    """Dict representation of a query metric."""
+
+    agg: str
+    column: str | None
+
+
+class QueryOrderDict(TypedDict):
+    """Dict representation of an order by clause."""
+
+    column: str
+    direction: str
+
+
+class QuerySpecDict(TypedDict, total=False):
+    """Loosely-typed dictionary form of QuerySpecModel."""
+
+    filters: list[QueryFilterDict]
+    group_by: list[str]
+    metrics: list[QueryMetricDict]
+    order_by: list[QueryOrderDict]
+    limit: int | None
+
+
 class QuerySpecModel(BaseModel):
     """Structured representation of a query spec."""
 
-    filters: list[QueryFilter] = Field(default_factory=list)
-    group_by: list[str] = Field(default_factory=list)
-    metrics: list[QueryMetric] = Field(default_factory=list)
-    order_by: list[QueryOrder] = Field(default_factory=list)
+    filters: Annotated[list[QueryFilter], Field(default_factory=list)]
+    group_by: Annotated[list[str], Field(default_factory=list)]
+    metrics: Annotated[list[QueryMetric], Field(default_factory=list)]
+    order_by: Annotated[list[QueryOrder], Field(default_factory=list)]
     limit: int | None = None
 
 

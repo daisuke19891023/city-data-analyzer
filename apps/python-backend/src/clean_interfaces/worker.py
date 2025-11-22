@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import time
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy import select
 
 from clean_interfaces.database import get_engine, session_scope
 from clean_interfaces.db_models import Experiment, ExperimentJob, InsightCandidate
+from clean_interfaces.models.dspy import QuerySpecDict
 from clean_interfaces.services.datasets import init_database
 from clean_interfaces.services.query_runner import QueryRunner
 
@@ -51,7 +52,8 @@ class ExperimentWorker:
 
             runner = QueryRunner(session)
             try:
-                result = runner.run(job.dataset_id, job.query_spec)
+                query_spec = cast(QuerySpecDict, job.query_spec or {})
+                result = runner.run(job.dataset_id, query_spec)
                 summary = result.get("summary", {})
                 description = self._build_description(job, summary)
                 candidate = InsightCandidate(
@@ -76,8 +78,8 @@ class ExperimentWorker:
                 session.commit()
             return True
 
-    def _build_description(self, job: ExperimentJob, summary: dict) -> str:
-        metrics = summary.get("metrics")
+    def _build_description(self, job: ExperimentJob, summary: dict[str, Any]) -> str:
+        metrics: list[dict[str, Any]] | None = summary.get("metrics")
         if metrics:
             metric_text = ", ".join(
                 f"{m.get('agg')}({m.get('column') or 'rows'})" for m in metrics

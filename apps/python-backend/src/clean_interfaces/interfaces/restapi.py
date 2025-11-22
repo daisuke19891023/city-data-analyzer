@@ -34,7 +34,11 @@ from clean_interfaces.models.experiments import (
     InsightFeedbackRequest,
     InsightsResponse,
 )
-from clean_interfaces.services.datasets import DatasetRepository, init_database
+from clean_interfaces.services.datasets import (
+    DatasetMetadata,
+    DatasetRepository,
+    init_database,
+)
 from clean_interfaces.services.dspy_program import InteractiveAnalysisProgram
 from clean_interfaces.services.plan_experiments import PlanExperiments
 
@@ -119,6 +123,8 @@ class RestAPIInterface(BaseInterface):
                 init_database(session)
             finally:
                 session.close()
+
+        self._startup_handler = _startup
 
     @property
     def name(self) -> str:
@@ -248,7 +254,7 @@ class RestAPIInterface(BaseInterface):
         @self.app.get("/datasets")
         async def list_datasets(  # type: ignore[misc]
             db: db_dep,
-        ) -> list[dict[str, Any]]:
+        ) -> list[DatasetMetadata]:
             repo = DatasetRepository(db)
             datasets = repo.list_datasets()
             return datasets
