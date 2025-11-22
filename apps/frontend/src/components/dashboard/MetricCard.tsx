@@ -14,7 +14,7 @@ function trendClass(trend: 'up' | 'down' | 'steady'): string {
     return 'metric-card__trend';
 }
 
-type MetricCardProps = {
+export type MetricCardProps = {
     label: string;
     value: string;
     helper: string;

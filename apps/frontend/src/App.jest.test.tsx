@@ -2,18 +2,18 @@ import { render, screen } from '@testing-library/react';
 import App from './App';
 
 describe('App component (Jest)', () => {
-    it('shows dashboard-ready copy and key metrics', () => {
+    it('shows interactive view and key controls', () => {
         render(<App />);
 
         expect(
-            screen.getByText(
-                /スマートフォンでも見やすいレスポンシブレイアウトです/
-            )
+            screen.getByText(/Vercel AI SDKを組み合わせて/)
         ).toBeInTheDocument();
-        expect(screen.getByText('人口増加率')).toBeInTheDocument();
-        expect(screen.getByText('AI改善提案 実行率')).toBeInTheDocument();
+        expect(screen.getByText(/データセット/)).toBeInTheDocument();
         expect(
-            screen.getByText(/ダッシュボード連携のチャット応答/)
+            screen.getByRole('button', { name: /ai提案を実行/i })
+        ).toBeInTheDocument();
+        expect(
+            screen.getByText(/インタラクティブチャット/)
         ).toBeInTheDocument();
     });
 });

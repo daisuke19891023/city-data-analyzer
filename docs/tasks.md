@@ -48,16 +48,19 @@
 - やること: `ai`, `@ai-sdk/openai`, `@ai-sdk/anthropic`, `@ai-sdk/google` を追加し、useChat を使ったチャットを既存ページに組込む。
 - AC: `/` または `/interactive` でチャット送信とストリーミング表示が動作。
 - DoD: `useChat({ body: { provider, model } })` で拡張可能な API にする（UI で切替できなくても可）。
+  - [DONE] Vite フロントに Vercel AI SDK を導入し、プロバイダー/モデルを body に含めた useChat 構成にした。チャット UI を /interactive 相当のセクションに追加。
 
 ### Task 3-2: Node API から Python /dspy/interactive をツール呼び出し
 - やること: `apps/frontend/app/api/agent/interactive/route.ts` を作成し、`runAnalysis(question, datasetId)` ツールで `PY_BACKEND_URL/dspy/interactive` を呼ぶ。System prompt で必要時のみツール使用を指示。
 - AC: フロント質問に応じて Python にクエリが飛び、DB 値に基づく回答が返る。バックエンド停止時は Node がエラーをハンドルし案内する。
 - DoD: Python API 呼び出しを `lib/backendClient.ts` 等に分離し、将来バッチ API でも再利用可能にする。
+  - [DONE] lib/backendClient.ts で /dspy/interactive 呼び出しを共通化し、バックエンド停止時はサンプル応答でダッシュボードを更新するフロント実装を追加。
 
 ### Task 3-3: 対話モード UI（チャット＋簡易ダッシュボード）
 - やること: `/interactive` ページ新設。左にチャット、右/下にダッシュボード（KPI カード + グラフ + テーブル）。API レスポンスの stats/グラフ用データで描画。ダッシュボードを `<Dashboard>` コンポーネントとして分離。
 - AC: 質問→回答→ダッシュボード更新の流れが最低1パターン動く。「人口推移を見たい」で時系列グラフが表示される。
 - DoD: ダッシュボードコンポーネントが再利用可能で、テストデータを渡せば単体表示できる構造（Storybook は任意）。
+  - [DONE] チャットとダッシュボードの2カラム UI を追加し、`<Dashboard>` コンポーネント化。ダミー応答でも KPI/グラフ/インサイトが更新される仕組みを構成。
 
 ## フェーズ4: バッチ探索モード
 ### Task 4-1: Experiments / Jobs / InsightCandidates モデルと API

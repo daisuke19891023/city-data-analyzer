@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import App from './App';
 
 describe('App component (Vitest)', () => {
-    it('renders hero, dashboard sections, and chat entry point', () => {
+    it('renders hero, dataset controls, and chat entry point', () => {
         render(<App />);
 
         expect(
@@ -12,13 +12,18 @@ describe('App component (Vitest)', () => {
             })
         ).toBeInTheDocument();
         expect(
-            screen.getByText(/都市データのダッシュボードとAIアシスタントを統合/)
+            screen.getByText(/都市データのダッシュボードとVercel AI SDK/)
         ).toBeInTheDocument();
         expect(
-            screen.getByRole('heading', { level: 3, name: /aiアシスタント/i })
+            screen.getByRole('heading', {
+                level: 3,
+                name: /インタラクティブチャット/i
+            })
         ).toBeInTheDocument();
-        expect(screen.getByLabelText('AIへの質問')).toHaveValue(
-            '最新の交通量ピークとAI提案の概要をまとめて'
+        expect(screen.getByLabelText('データセット')).toBeInTheDocument();
+        expect(screen.getByLabelText('AIへの質問')).toHaveAttribute(
+            'placeholder',
+            expect.stringContaining('夜間ピーク')
         );
     });
 });
