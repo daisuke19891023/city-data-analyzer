@@ -106,15 +106,14 @@ export async function fetchDatasets(): Promise<
         year?: number | null;
     }[]
 > {
-    const data =
-        await safeFetch<
-            {
-                id: number;
-                name: string;
-                description?: string | null;
-                year?: number | null;
-            }[]
-        >('/datasets');
+    const data = await safeFetch<
+        {
+            id: number;
+            name: string;
+            description?: string | null;
+            year?: number | null;
+        }[]
+    >('/datasets');
     return (
         data || [
             {
@@ -187,9 +186,7 @@ export async function fetchExperimentDetail(experimentId: number): Promise<{
     return await safeFetch(`/experiments/${experimentId}`);
 }
 
-export async function fetchInsightCandidates(
-    experimentId: number
-): Promise<{
+export async function fetchInsightCandidates(experimentId: number): Promise<{
     insights: Array<{
         id: number;
         title: string;

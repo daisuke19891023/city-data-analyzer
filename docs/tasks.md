@@ -120,3 +120,4 @@
 - [DONE] CI lint/format 修正
   - ruff の TC/E501 系指摘を修正して `uv run --with nox nox -s lint` を通過
   - フロントエンドの Prettier チェックを `npm run format --workspace frontend -- --write` で解消
+  - CI の frontend format ステップ（`npm run format --workspace frontend`）が通過するよう再整形を実施

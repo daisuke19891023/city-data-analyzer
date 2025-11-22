@@ -25,16 +25,14 @@ describe('ExperimentsPage', () => {
             },
             { id: 2, name: '交通量データセット', description: null, year: 2022 }
         ]);
-        mockedListExperiments
-            .mockResolvedValueOnce([])
-            .mockResolvedValue([
-                {
-                    id: 11,
-                    goal_description: 'goal',
-                    status: 'pending',
-                    dataset_ids: [1]
-                }
-            ]);
+        mockedListExperiments.mockResolvedValueOnce([]).mockResolvedValue([
+            {
+                id: 11,
+                goal_description: 'goal',
+                status: 'pending',
+                dataset_ids: [1]
+            }
+        ]);
         mockedCreateExperiment.mockResolvedValue(42);
 
         render(
