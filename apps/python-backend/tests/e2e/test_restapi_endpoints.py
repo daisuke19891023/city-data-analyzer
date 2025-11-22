@@ -157,7 +157,8 @@ def experiment_with_insight(seed_dataset: int) -> InsightCandidate:
 
 
 def test_list_datasets_returns_seeded_metadata(
-    api_client: TestClient, seed_dataset: int,
+    api_client: TestClient,
+    seed_dataset: int,
 ) -> None:
     """Ensure seeded dataset metadata is returned by /datasets."""
     response = api_client.get("/datasets")
@@ -167,7 +168,9 @@ def test_list_datasets_returns_seeded_metadata(
 
 
 def test_interactive_analysis_returns_response(
-    api_client: TestClient, seed_dataset: int, monkeypatch: pytest.MonkeyPatch,
+    api_client: TestClient,
+    seed_dataset: int,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Return interactive analysis response with stubbed program."""
     stubbed_response = InteractiveResponse(
@@ -189,7 +192,8 @@ def test_interactive_analysis_returns_response(
     )
 
     def _run(
-        _self: InteractiveAnalysisProgram, _payload: dict[str, object],
+        _self: InteractiveAnalysisProgram,
+        _payload: dict[str, object],
     ) -> InteractiveResponse:  # type: ignore[override]
         return stubbed_response
 
@@ -204,6 +208,23 @@ def test_interactive_analysis_returns_response(
     assert data["dataset_id"] == seed_dataset
     assert data["analysis_id"] == 1
     assert data["query_spec"]["metrics"][0]["agg"] == "count"
+
+
+def test_root_redirects_and_health_and_welcome(api_client: TestClient) -> None:
+    """Cover root redirect, health check, and welcome endpoints."""
+    root_resp = api_client.get("/", follow_redirects=False)
+    assert root_resp.status_code == 307
+    assert root_resp.headers.get("location") == "/docs"
+
+    health_resp = api_client.get("/health")
+    assert health_resp.status_code == 200
+    assert health_resp.json()["status"] == "healthy"
+
+    welcome_resp = api_client.get("/api/v1/welcome")
+    assert welcome_resp.status_code == 200
+    payload = welcome_resp.json()
+    assert payload["interface"] == "RestAPI"
+    assert "Welcome" in payload["message"]
 
 
 def test_interactive_requires_payload(api_client: TestClient) -> None:
@@ -238,7 +259,8 @@ def test_experiment_detail_not_found(api_client: TestClient) -> None:
 
 
 def test_insights_listing(
-    api_client: TestClient, experiment_with_insight: InsightCandidate,
+    api_client: TestClient,
+    experiment_with_insight: InsightCandidate,
 ) -> None:
     """List insights for experiment including seeded candidate."""
     response = api_client.get(
@@ -250,7 +272,8 @@ def test_insights_listing(
 
 
 def test_feedback_happy_path(
-    api_client: TestClient, experiment_with_insight: InsightCandidate,
+    api_client: TestClient,
+    experiment_with_insight: InsightCandidate,
 ) -> None:
     """Post feedback for existing insight and receive confirmation."""
     response = api_client.post(
@@ -288,3 +311,19 @@ def test_feedback_missing_candidate_returns_404(api_client: TestClient) -> None:
         },
     )
     assert response.status_code == 404
+
+
+def test_candidate_feedback_endpoint(
+    api_client: TestClient,
+    experiment_with_insight: InsightCandidate,
+) -> None:
+    """Submit feedback via candidate endpoint and confirm adoption flag updates."""
+    response = api_client.post(
+        f"/insights/{experiment_with_insight.id}/feedback",
+        json={"decision": "adopted", "comment": "採択"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["id"] == experiment_with_insight.id
+    assert payload["adopted"] is True

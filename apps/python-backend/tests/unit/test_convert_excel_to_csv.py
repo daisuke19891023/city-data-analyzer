@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import argparse
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
@@ -23,7 +23,8 @@ def test_parse_args_defaults(tmp_path: Path) -> None:
 
 
 def test_main_reads_specified_sheet_and_writes_csv(
-    monkeypatch: Any, tmp_path: Path,
+    monkeypatch: Any,
+    tmp_path: Path,
 ) -> None:
     """Ensure main() reads a chosen sheet and writes a CSV output."""
     excel_path = tmp_path / "input.xlsx"
