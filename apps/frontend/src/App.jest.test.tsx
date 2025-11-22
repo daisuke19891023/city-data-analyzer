@@ -2,12 +2,18 @@ import { render, screen } from '@testing-library/react';
 import App from './App';
 
 describe('App component (Jest)', () => {
-    it('shows the helper copy', () => {
+    it('shows dashboard-ready copy and key metrics', () => {
         render(<App />);
+
         expect(
             screen.getByText(
-                /frontend scaffold powered by vite, react, and typescript/i
+                /スマートフォンでも見やすいレスポンシブレイアウトです/
             )
+        ).toBeInTheDocument();
+        expect(screen.getByText('人口増加率')).toBeInTheDocument();
+        expect(screen.getByText('AI改善提案 実行率')).toBeInTheDocument();
+        expect(
+            screen.getByText(/ダッシュボード連携のチャット応答/)
         ).toBeInTheDocument();
     });
 });
