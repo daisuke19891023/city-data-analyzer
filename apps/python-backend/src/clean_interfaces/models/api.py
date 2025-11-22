@@ -54,18 +54,23 @@ class SwaggerAnalysisResponse(BaseModel):
     """Swagger UI source code analysis response model."""
 
     interfaces: list[str] = Field(
+        default_factory=list,
         description="List of discovered interface classes",
     )
     models: list[str] = Field(
+        default_factory=list,
         description="List of discovered model classes",
     )
     endpoints: list[str] = Field(
+        default_factory=list,
         description="List of discovered API endpoints",
     )
     documentation_files: list[str] = Field(
+        default_factory=list,
         description="List of documentation files found",
     )
     summary: dict[str, int] = Field(
+        default_factory=dict,
         description="Summary statistics of analysis",
     )
 

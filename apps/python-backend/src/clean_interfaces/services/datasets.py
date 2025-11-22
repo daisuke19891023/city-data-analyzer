@@ -7,7 +7,7 @@ import hashlib
 import json
 import re
 from collections import Counter
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -22,9 +22,29 @@ from clean_interfaces.db_models import (
 )
 from clean_interfaces.database import init_db
 
+
+class ColumnMetadata(TypedDict):
+    """Metadata for a dataset column."""
+
+    name: str
+    data_type: str
+    description: str | None
+    is_index: bool
+
+
+class DatasetMetadata(TypedDict):
+    """Metadata describing a dataset and its columns."""
+
+    id: int
+    slug: str
+    name: str
+    description: str | None
+    year: int | None
+    columns: list[ColumnMetadata]
+
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
-    from collections.abc import Iterable
     from pathlib import Path
+    from collections.abc import Iterable
     from sqlalchemy.orm import Session
 
 DEFAULT_OPEN_DATA_CATEGORIES: list[tuple[str, str]] = [
@@ -102,7 +122,7 @@ class DatasetRepository:
         self.session.commit()
         return dataset
 
-    def upsert_columns(self, dataset: Dataset, columns: list[dict]) -> None:
+    def upsert_columns(self, dataset: Dataset, columns: list[dict[str, Any]]) -> None:
         """Insert column metadata if missing."""
         existing = {col.name: col for col in dataset.columns}
         for column in columns:
@@ -123,7 +143,9 @@ class DatasetRepository:
                 )
         self.session.commit()
 
-    def add_record(self, dataset: Dataset, row_json: dict, index_cols: dict) -> None:
+    def add_record(
+        self, dataset: Dataset, row_json: dict[str, Any], index_cols: dict[str, Any],
+    ) -> None:
         """Insert a record if it does not already exist (idempotent)."""
         row_hash = hashlib.sha256(
             json.dumps(row_json, sort_keys=True, ensure_ascii=False).encode("utf-8"),
@@ -186,14 +208,14 @@ class DatasetRepository:
                 rows.append(parsed_row)
             return rows
 
-    def get_dataset_metadata(self, dataset_id: int) -> dict:
+    def get_dataset_metadata(self, dataset_id: int) -> DatasetMetadata:
         """Return metadata (slug/name/description/year/columns) for a dataset."""
         dataset = self.session.get(Dataset, dataset_id)
         if not dataset:
             msg = f"Dataset {dataset_id} not found"
             raise ValueError(msg)
 
-        columns = [
+        columns: list[ColumnMetadata] = [
             {
                 "name": col.name,
                 "data_type": col.data_type,
@@ -213,7 +235,16 @@ class DatasetRepository:
             "columns": columns,
         }
 
-    def get_records(self, dataset_id: int) -> list[dict]:
+    def list_datasets(self) -> list[DatasetMetadata]:
+        """List datasets with their column metadata."""
+        datasets = self.session.execute(select(Dataset)).scalars().all()
+        return [self.get_dataset_metadata(dataset.id) for dataset in datasets]
+
+    def get_datasets_metadata(self, datasets: list[Dataset]) -> list[DatasetMetadata]:
+        """Return metadata for a list of dataset entities."""
+        return [self.get_dataset_metadata(dataset.id) for dataset in datasets]
+
+    def get_records(self, dataset_id: int) -> list[dict[str, Any]]:
         """Fetch all stored records for a dataset as dictionaries."""
         return [
             row_json
@@ -228,8 +259,8 @@ class DatasetRepository:
         self,
         dataset_id: int,
         question: str,
-        query_spec: dict,
-        result_summary: dict,
+        query_spec: dict[str, Any],
+        result_summary: dict[str, Any],
         provider: str | None,
         model: str | None,
     ) -> AnalysisQuery:
@@ -247,7 +278,7 @@ class DatasetRepository:
         return analysis
 
 
-def parse_value(value: str | None) -> object:
+def parse_value(value: str | None) -> Any:
     """Convert CSV cell strings to typed Python values."""
     if value is None:
         return None
@@ -263,7 +294,7 @@ def parse_value(value: str | None) -> object:
 
 def infer_columns(
     rows: Iterable[dict[str, object]], index_columns: list[str] | None = None,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """Infer column metadata (name/type/is_index) from the first batch of rows."""
     rows_list = list(rows)
     if not rows_list:
@@ -281,7 +312,7 @@ def infer_columns(
             else:
                 column_types[key]["text"] += 1
 
-    inferred: list[dict] = []
+    inferred: list[dict[str, Any]] = []
     for key in keys:
         counts = column_types[key]
         data_type = "text"
@@ -303,7 +334,9 @@ def infer_columns(
     return inferred
 
 
-def extract_index_cols(row: dict[str, object], inferred_columns: list[dict]) -> dict:
+def extract_index_cols(
+    row: dict[str, object], inferred_columns: list[dict[str, Any]],
+) -> dict[str, object]:
     """Extract index column values from a row using inferred metadata."""
     index_values: dict[str, object] = {}
     for column in inferred_columns:

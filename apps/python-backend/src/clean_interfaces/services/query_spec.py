@@ -4,28 +4,37 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, cast
+
+if TYPE_CHECKING:
+    from clean_interfaces.models.dspy import (
+        QueryFilterDict,
+        QueryMetricDict,
+        QueryOrderDict,
+        QuerySpecDict,
+    )
+    from clean_interfaces.services.datasets import ColumnMetadata, DatasetMetadata
 
 
 @dataclass
 class QuerySpec:
     """In-memory representation of a generated query specification."""
 
-    filters: list[dict]
+    filters: list[QueryFilterDict]
     group_by: list[str]
-    metrics: list[dict]
-    order_by: list[dict]
+    metrics: list[QueryMetricDict]
+    order_by: list[QueryOrderDict]
     limit: int | None = None
 
-    def model_dump(self) -> dict:
+    def model_dump(self) -> QuerySpecDict:
         """Return a plain dictionary representation."""
-        return {
+        return cast("QuerySpecDict", {
             "filters": self.filters,
             "group_by": self.group_by,
             "metrics": self.metrics,
             "order_by": self.order_by,
             "limit": self.limit,
-        }
+        })
 
 
 class RuleBasedQueryGenerator:
@@ -41,7 +50,7 @@ class RuleBasedQueryGenerator:
             "count": ["件数", "数", "count"],
         }
 
-    def generate(self, question: str, dataset_meta: dict[str, Any]) -> QuerySpec:
+    def generate(self, question: str, dataset_meta: DatasetMetadata) -> QuerySpec:
         """Generate a QuerySpec from a question and dataset metadata."""
         columns = dataset_meta.get("columns", [])
         normalized_question = question.lower()
@@ -58,8 +67,10 @@ class RuleBasedQueryGenerator:
             limit=limit,
         )
 
-    def _detect_group_by(self, question: str, columns: list[dict]) -> list[str]:
-        candidates = []
+    def _detect_group_by(
+        self, question: str, columns: list[ColumnMetadata],
+    ) -> list[str]:
+        candidates: list[str] = []
         for column in columns:
             name = column["name"].lower()
             if re.search(r"year|年度|年", question) and re.search(
@@ -72,8 +83,10 @@ class RuleBasedQueryGenerator:
                 candidates.append(column["name"])
         return list(dict.fromkeys(candidates))
 
-    def _detect_metrics(self, question: str, columns: list[dict]) -> list[dict]:
-        metrics: list[dict] = []
+    def _detect_metrics(
+        self, question: str, columns: list[ColumnMetadata],
+    ) -> list[QueryMetricDict]:
+        metrics: list[QueryMetricDict] = []
         numeric_columns = [col for col in columns if col.get("data_type") == "number"]
         for agg, keywords in self.metric_keywords.items():
             if any(keyword in question for keyword in keywords):
@@ -83,8 +96,10 @@ class RuleBasedQueryGenerator:
             metrics.append({"agg": "count", "column": None})
         return metrics
 
-    def _detect_filters(self, question: str, columns: list[dict]) -> list[dict]:
-        filters: list[dict] = []
+    def _detect_filters(
+        self, question: str, columns: list[ColumnMetadata],
+    ) -> list[QueryFilterDict]:
+        filters: list[QueryFilterDict] = []
         year_match = re.search(r"(20\d{2})年?", question)
         if year_match:
             year = int(year_match.group(1))
@@ -100,8 +115,8 @@ class RuleBasedQueryGenerator:
         return filters
 
     def _detect_order(
-        self, question: str, group_by: list[str], metrics: list[dict],
-    ) -> list[dict]:
+        self, question: str, group_by: list[str], metrics: list[QueryMetricDict],
+    ) -> list[QueryOrderDict]:
         if metrics:
             metric = metrics[0]
             column = metric["column"] or metrics[0].get("column")

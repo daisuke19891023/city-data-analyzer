@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from clean_interfaces.models.dspy import (
     InteractiveRequest,
     InteractiveResponse,
+    QuerySpecDict,
     QuerySpecModel,
 )
 from clean_interfaces.services.query_runner import QueryRunner
@@ -31,20 +32,23 @@ class InteractiveAnalysisProgram:
         """Execute NL question to query to result pipeline."""
         dataset_meta = self.repo.get_dataset_metadata(request.dataset_id)
         query_spec = self.generator.generate(request.question, dataset_meta)
-        result = self.runner.run(request.dataset_id, query_spec.model_dump())
+        query_spec_dict: QuerySpecDict = query_spec.model_dump()
+        result = self.runner.run(request.dataset_id, query_spec_dict)
         insight = self._summarize(request.question, result)
         self.repo.record_analysis(
             dataset_id=request.dataset_id,
             question=request.question,
-            query_spec=query_spec.model_dump(),
+            query_spec=dict(query_spec_dict),
             result_summary=result["summary"],
             provider=request.provider,
             model=request.model,
         )
+        query_spec_payload: dict[str, Any] = dict(query_spec_dict)
+
         return InteractiveResponse(
             dataset_id=request.dataset_id,
             question=request.question,
-            query_spec=QuerySpecModel(**query_spec.model_dump()),
+            query_spec=QuerySpecModel(**query_spec_payload),
             data=result["data"],
             stats=result["summary"],
             insight=insight,

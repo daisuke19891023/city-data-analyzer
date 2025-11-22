@@ -72,16 +72,19 @@
 - やること: `experiments`, `experiment_jobs`, `insight_candidates` テーブルを追加。FastAPI に `POST /experiments`, `GET /experiments/{id}`, `GET /experiments/{id}/insights` を実装。
 - AC: `POST /experiments` で experiment_id が返る。`GET /experiments/{id}/insights` で JSON 配列が返る（空でも可）。
 - DoD: I/O スキーマを Pydantic モデルで型定義。マイグレーションにテーブル定義を追加。
+  - [DONE] SQLAlchemy モデル/マイグレーションを追加し、Experiment API（作成・取得・インサイト取得・フィードバック）を実装。
 
 ### Task 4-2: DSPy PlanExperiments とワーカー
 - やること: `PlanExperimentsSig/PlanExperiments` を実装し、`POST /experiments` で jobs を生成し保存。`worker.py` が pending jobs を処理し、job_type に応じて集計・insight_candidates 保存・失敗時ステータス更新。
 - AC: 1実験作成→ワーカー稼働で insight_candidates にレコードが生成。失敗 job は status='failed' とエラー原因を保存。
 - DoD: ワーカー起動コマンドを README に明記。1 goal で複数 job→複数 insight が生成されたログかスクリーンショットを残す。
+  - [DONE] PlanExperiments と ExperimentWorker を追加し、ジョブ作成・処理・インサイト生成のログを docs に記載。README にワーカー起動手順を追記。
 
 ### Task 4-3: フロントのバッチ探索 UI
 - やること: `/experiments` ページで goal 入力・dataset 選択・実験作成・一覧表示。`/experiments/[id]` で概要・insight_cards 表示と採用/却下/コメント UI。
 - AC: 実験作成→待機→開き直しでインサイト候補がリストアップ。採用/却下/コメントが DB に反映。
 - DoD: バッチ探索フロー（作成→待つ→レビュー）を docs に図または文章で整理。
+  - [DONE] React Router を導入し、/experiments と /experiments/:id で実験作成・一覧・フィードバック UI を追加。フローを docs/batch_experiments_flow.md にまとめた。
 
 ## フェーズ5: フィードバック蓄積 & DSPy 自動チューニング
 ### Task 5-1: フィードバック API & UI
@@ -108,3 +111,13 @@
 ## MVP のすすめ方
 - まずフェーズ2の Task 2-3〜2-5（DSPy を用いた最小インタラクティブ分析）を優先すると、対話モードの骨格が早期に確認できる。
 - 併せてフェーズ3の Node API 設計をコードレベルまで固めると、フロント接続がスムーズ。
+
+## メンテナンス・QA
+- [DONE] バックエンド nox 実行とフロントのバッチ探索テスト追加
+  - uv run nox で lint/typing/pytest/pip-audit など品質チェックを実行
+  - backendClient/ExperimentsPage/ExperimentDetailPage に単体テストを追加し、Vitest/Jest を通過
+  - npm run --workspace apps/frontend test -- --runInBand で動作確認
+- [DONE] CI lint/format 修正
+  - ruff の TC/E501 系指摘を修正して `uv run --with nox nox -s lint` を通過
+  - フロントエンドの Prettier チェックを `npm run format --workspace frontend -- --write` で解消
+  - CI の frontend format ステップ（`npm run format --workspace frontend`）が通過するよう再整形を実施
