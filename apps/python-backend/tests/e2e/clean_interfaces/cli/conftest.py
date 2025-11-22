@@ -3,6 +3,7 @@
 import os
 import sys
 from collections.abc import Generator
+from pathlib import Path
 from typing import Any
 
 import pexpect
@@ -206,7 +207,11 @@ def clean_env() -> dict[str, str]:
     }
 
     # Add Python path to ensure our package is importable
-    if "PYTHONPATH" in os.environ:
-        env["PYTHONPATH"] = os.environ["PYTHONPATH"]
+    src_path = Path(__file__).resolve().parents[4] / "src"
+    existing_pythonpath = os.environ.get("PYTHONPATH", "")
+    if existing_pythonpath:
+        env["PYTHONPATH"] = f"{src_path}:{existing_pythonpath}"
+    else:
+        env["PYTHONPATH"] = str(src_path)
 
     return env

@@ -1,14 +1,24 @@
 """E2E tests for CLI interface functionality."""
 
+import os
 import re
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
 
 class TestCLIInterfaceE2E:
     """E2E tests for CLI interface."""
+
+    @staticmethod
+    def _env_with_src_path() -> dict[str, str]:
+        env = os.environ.copy()
+        src_path = Path(__file__).resolve().parents[2] / "src"
+        existing = env.get("PYTHONPATH", "")
+        env["PYTHONPATH"] = f"{src_path}:{existing}" if existing else str(src_path)
+        return env
 
     @staticmethod
     def strip_ansi_codes(text: str) -> str:
@@ -24,6 +34,7 @@ class TestCLIInterfaceE2E:
             capture_output=True,
             text=True,
             check=False,
+            env=self._env_with_src_path(),
         )
 
         assert result.returncode == 0
@@ -38,6 +49,7 @@ class TestCLIInterfaceE2E:
             capture_output=True,
             text=True,
             check=False,
+            env=self._env_with_src_path(),
         )
 
         assert result.returncode == 0
@@ -57,6 +69,7 @@ class TestCLIInterfaceE2E:
             capture_output=True,
             text=True,
             check=False,
+            env=self._env_with_src_path(),
         )
 
         assert result.returncode == 0
