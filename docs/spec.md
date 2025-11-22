@@ -16,7 +16,7 @@
 
 ## データ/LLM 前提
 - 共通環境変数: `PY_BACKEND_URL`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY`, `DATABASE_URL` などを `.env.example` に集約。
-- オープンデータ: 市区町村人口統計 CSV 等を datasets/dataset_rows にロードする前提。
+- オープンデータ: 川崎市オープンデータカタログの CSV を別プロジェクトでダウンロード・前処理済みとし、本プロジェクトは CSV を取り込んで DB 化する。カテゴリは「医療・介護・福祉」「防災・防犯」「観光・イベント」「住まい・生活・引越し」「子育て・教育」「公共施設・都市計画」「人口・世帯」「環境・エネルギー」「情報通信・先端技術」「産業」「地図・地理空間」「その他」の12種を初期値として扱う。
 - LLM: DSPy 経由で OpenAI/Anthropic/Gemini を切替可能にし、litellm で統一インターフェイスを確保。
 
 ## 機能要求（フェーズ別）
@@ -24,11 +24,11 @@
 - フロント/バックエンドの dev 起動手順を整備し、README と .env.example に集約。
 
 ### フェーズ2: Python バックエンドにデータ基盤 + DSPy 最小パイプライン
-- DB スキーマ（datasets, dataset_rows, analysis_queries）とマイグレーション雛形。
-- 人口統計データ ETL スクリプト（idempotent）。
-- DSPy NL→QuerySpec モジュール + LM 設定切替。
-- QuerySpec 集計 API (`POST /analysis/query`) と基本統計。
-- DSPy インタラクティブ API (`POST /dspy/interactive`) で NL→集計→インサイト文章を一括返却。
+- DB スキーマ（open_data_categories, datasets, dataset_columns, dataset_records, analysis_queries [+ dataset_files 任意]）とマイグレーション雛形。CSV カラムを JSONB で柔軟に保持し、index 抽出用カラムを設ける。
+- CSV 取り込みスクリプト（idempotent）。カテゴリ slug と dataset slug を受け取り、ヘッダから dataset_columns を生成し dataset_records に JSONB で投入。year/ward_code などの index_cols 抽出ルールを備える。
+- DSPy NL→QuerySpec モジュールを拡張し、dataset_meta（dataset_columns, index_cols 情報）を LLM に渡す。
+- QuerySpec 集計 API (`POST /analysis/query`) を JSONB 抽出ベースで汎用化し、基本統計を返す。
+- DSPy インタラクティブ API (`POST /dspy/interactive`) で NL→集計→インサイト文章を一括返却。dataset_id を入力とし、複数データセットに対応。
 
 ### フェーズ3: Next.js フロント + Vercel AI SDK 対話モード
 - Vercel AI SDK によるチャット UI。
@@ -36,13 +36,13 @@
 - /interactive ページでチャット + ダッシュボード描画。
 
 ### フェーズ4: バッチ探索モード
-- experiments/experiment_jobs/insight_candidates モデルと API。
-- DSPy PlanExperiments + ワーカーでジョブ処理とインサイト蓄積。
+- experiments/experiment_jobs/insight_candidates モデルと API。結合キーの推定には dataset_columns.is_index を活用。
+- DSPy PlanExperiments + ワーカーでジョブ処理とインサイト蓄積。query_spec には dataset_id を含める。
 - フロントのバッチ探索 UI（実験作成・結果レビュー）。
 
 ### フェーズ5: フィードバック蓄積 & DSPy 自動チューニング
 - insight_feedback API & UI。
-- DSPy Optimizer で NL→DSL をコンパイルし、program_version を管理。
+- DSPy Optimizer で NL→DSL をコンパイルし、program_version を管理。analysis_queries には dataset_id と dataset_version を保存。
 - フィードバックから trainset を生成し再コンパイルを回す導線。
 
 ### フェーズ6: 仕上げ

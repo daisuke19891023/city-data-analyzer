@@ -18,30 +18,30 @@
 - DoD: README 手順だけで別メンバーが両サーバを立ち上げられる状態。
 
 ## フェーズ2: Python バックエンドにデータ基盤 + DSPy 最小パイプライン
-### Task 2-1: DB スキーマ設計とマイグレーション雛形
-- やること: `datasets`, `dataset_rows`, `analysis_queries` のテーブルを SQLAlchemy モデル or Alembic で追加。
-- AC: マイグレーション実行で上記テーブル作成。`datasets` に対する SELECT/INSERT が動作。
-- DoD: `apps/python-backend/docs/` か README に ER 図/テーブル説明（カラムと用途）を記載。
+### Task 2-1: スキーマ定義（柔軟なオープンデータ対応）
+- やること: `open_data_categories`, `datasets`, `dataset_columns`, `dataset_records`, `analysis_queries`（+ 任意で `dataset_files`）のテーブルを Alembic などで追加。川崎市オープンデータ12カテゴリを初期登録し、JSONB で柔軟な列を保持する。
+- AC: マイグレーション実行で上記テーブル作成。open_data_categories に12件が挿入済み。任意の datasets/dataset_columns への INSERT が通る。
+- DoD: `apps/python-backend/docs/` に ER 図とテーブル説明（カラム用途、index_cols の意図）を記載。
 
-### Task 2-2: 人口統計データの取り込みスクリプト
-- やること: `scripts/load_population.py` などで CSV を datasets + dataset_rows に投入。`dataset_rows.row_json` で柔軟に保持。idempotent 性を意識。
-- AC: スクリプト実行後、datasets に1レコード、dataset_rows に数百〜数千件のデータが入り人口や年/自治体コードが確認できる。
-- DoD: 再実行時の挙動を README に明記（重大な重複を避けるか、注意書き）。
+### Task 2-2: CSV取り込みスクリプト（複数形対応）
+- やること: `scripts/load_csv.py` を作成し、カテゴリ slug・dataset slug・CSV パス・データセット名・説明・年度を受け取る。存在しない場合は datasets/dataset_columns を自動登録し、dataset_records に row_json/index_cols を idempotent に投入。year/ward_code などの index 抽出ルールまたはマッピング設定を実装。
+- AC: サンプル CSV で datasets/dataset_columns/dataset_records にデータが投入され、行数が一致。index_cols に year や ward_code が格納される。
+- DoD: README または docs に使い方・引数説明・サンプル実行例・失敗時のロールバック説明を記載。
 
-### Task 2-3: DSPy NL→QuerySpec モジュール作成
-- やること: `pyproject.toml` に `dspy-ai`, `litellm` を追加。`src/clean_interfaces/citydata/dspy_programs/nl2query.py` を作成し、`configure_lm(provider, model)`、`NL2QuerySpecSig`、`NL2QuerySpec` を実装。
-- AC: 代表質問（例: 「東京都の2015年以降の高齢者人口の推移を見たい」）で JSON パース可能な `query_spec` が返る。カラム名がスキーマに存在するものだけになっている。
-- DoD: 3〜5 パターンの質問と `query_spec` 例をソースまたは docs に残す。LM 設定失敗時に FastAPI が 5xx でなく明示エラー JSON を返す。
+### Task 2-3: DSPy NL→QuerySpec モジュールの拡張
+- やること: NL2QuerySpec を dataset_meta（dataset_columns, index_cols 説明を含む JSON）を入力に取るよう拡張。日本語カラム名をそのまま使用し、filters/group_by/metrics/order_by/limit を dataset_columns に基づいて生成。
+- AC: 任意の dataset_id に対し日本語質問から有効な query_spec JSON を生成し、存在しないカラムが含まれない。
+- DoD: 3〜5件の dataset_id と質問例に対する query_spec 出力サンプルを docs に記載。Task 2-4 でエラーにならないことを確認。
 
-### Task 2-4: QuerySpec → 集計実行 → 基本統計 API
-- やること: query_spec を受けて SQL を発行し、pandas などで基本統計を計算する関数を実装。FastAPI に `POST /analysis/query` を追加。
-- AC: `POST /analysis/query` で期待通りの集計が返る。不正 query_spec で 400 台とわかりやすいメッセージ。
-- DoD: 集計ロジックを関数に切出しユニットテストを最低1本追加。引数/戻り値は素直な Python 型で DSPy からも再利用可能にする。
+### Task 2-4: QuerySpec 実行 & 基本統計計算の汎用化
+- やること: query_spec と dataset_id を受けて JSONB 抽出 SQL を動的生成し、filters/group_by/metrics/order_by/limit を反映。結果を DataFrame 変換し平均/最大/最小/件数などを返却。バインドパラメータで安全性を確保。
+- AC: Task 2-3 の query_spec を入力して data/summary/schema が取得できる。不正カラム/フィルタは 400 を返す。
+- DoD: 異なる2種類以上のデータセットで動作確認。SQL インジェクション対策を説明。
 
-### Task 2-5: DSPy /dspy/interactive プログラム
-- やること: `src/clean_interfaces/citydata/dspy_programs/interactive.py` に `InteractiveAnalysisProgram`（NL2QuerySpec → 集計関数 → SummarizeInsight）を Module として実装。FastAPI に `POST /dspy/interactive` を追加。
-- AC: エンドポイント呼び出しで「質問に対応した集計」と説明文が一度に返る。同じ質問で意味的に一貫した回答が返る。
-- DoD: `/dspy/interactive` の I/O フォーマットを docs に明記。InteractiveAnalysisProgram は DSPy Module クラスで定義。
+### Task 2-5: DSPy インタラクティブプログラム & /dspy/interactive エンドポイント
+- やること: InteractiveAnalysisProgram を NL2QuerySpec → run_query_and_stats → SummarizeInsight で再構成し、dataset_meta を渡す。FastAPI の `/dspy/interactive` に dataset_id/question/provider/model を受ける I/F を追加し、stats/query_spec/insight を返す。
+- AC: 複数データセット（人口系・施設系など）への質問で適切なインサイトと集計が返る。タイムアウトせず完了。
+- DoD: 3〜5件の質問例と dataset_id を用意し docs にリクエスト/レスポンススキーマを記載。
 
 ## フェーズ3: Next.js フロント + Vercel AI SDK 連携
 ### Task 3-1: フロントに Vercel AI SDK を導入
