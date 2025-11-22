@@ -130,3 +130,111 @@
   - ruff/pyright の指摘を解消し、nox の lint/typing/test セッションを成功させた
   - pip-audit は証明書検証エラー、Sphinx ビルドは既存の重複 docstring 警告で失敗することを確認
   - `npm run --workspace apps/frontend lint` と `npm run --workspace apps/frontend format -- --write` を完了
+
+## フェーズ7: UX 向上プラン統合
+### テーマA: 観点提案 UX
+#### Task A-1: 観点テンプレートのスキーマ & API 追加
+- ステータス: TODO
+- やること: `analysis_viewpoints` テーブルと `GET/POST /viewpoints`, `GET /viewpoints/{id}` を追加し、config_json に推奨データセット ID などを保持。
+- AC: 3〜5件のテンプレートを登録し一覧/詳細取得できる。
+- DoD: テーブル定義と API I/O を docs に記載し、curl で3件以上登録→取得済み。
+
+#### Task A-2: 観点テンプレートギャラリーUI
+- ステータス: TODO
+- やること: `/interactive` などにギャラリーコンポーネントを配置し、カードクリックで nl_prompt を下書き or 即送信。タグ/検索フィルタとモバイル対応。
+- AC: 3枚以上のカード表示とクリック時の自動入力/送信が動作し、観点に沿った回答が得られる。
+- DoD: ギャラリーコンポーネントが独立し、別ページに埋め込める。スマホ幅でもカードが崩れない。
+
+#### Task A-3: データセットに応じた質問サジェスト
+- ステータス: TODO
+- やること: `GET /datasets/{id}/suggested_questions` を追加し、LLM に dataset schema + 観点テンプレートを渡して質問候補を生成。フロントでチップ表示しクリック送信。
+- AC: データセット変更で候補が変わり、候補から送信すると分析が実行される。
+- DoD: レスポンス例を docs に記載し、代表的な 2〜3 dataset_id でサジェスト内容を確認。
+
+#### Task A-4: 会話ショートカットボタン
+- ステータス: TODO
+- やること: よく使う指示をチップ化しチャット下に配置。クリックで messages に定義済み system/user メッセージを追加して送信。
+- AC: 3種類以上のショートカットから即応答が返る。
+- DoD: 定義が一箇所に集約され拡張しやすく、UX 的に邪魔にならない位置に配置。
+
+### テーマB: 知見の蓄積 & 再利用
+#### Task B-1: 分析レシピのスキーマ & API
+- ステータス: TODO
+- やること: `analysis_recipes` テーブルと `POST/GET /recipes`, `GET /recipes/{id}` を追加。query_spec_json/chart_config_json を保存。
+- AC: 対話モードで生成した query_spec と chart_config を保存し、一覧取得できる。
+- DoD: レシピ 2〜3 件を手動保存し DB 内容を確認。JSON 構造を docs に記載。
+
+#### Task B-2: レシピの適用 UI
+- ステータス: TODO
+- やること: `/interactive` or `/recipes` に一覧と「このレシピを使う」ボタンを配置。必要なら自治体コード/期間をモーダル入力し、/analysis/query をパラメータ上書きで実行。
+- AC: レシピから別自治体で同じ分析を実行し、ダッシュボード表示まで 1クリック + 1〜2入力で完了。
+- DoD: 実行結果と元レシピ説明を紐付けて表示し、「レシピ利用」ラベルを付与。
+
+#### Task B-3: インサイトノート & タグ・検索
+- ステータス: TODO
+- やること: `insight_notes` テーブルと `POST/GET /insight-notes`/`/search` を実装。対話/実験詳細からノート保存、/notes でタグ/キーワード絞り込み UI を提供。
+- AC: ノート保存→タグ絞り込み・検索が機能し、ヒットしたノートが表示される。
+- DoD: 3〜5件のノートで保存〜検索のデモを確認。
+
+#### Task B-4: 簡易レポート出力（Markdown/PDF）
+- ステータス: TODO
+- やること: ノート/インサイトの複数選択 UI を追加し、Python で Markdown（将来 PDF）レポートを生成。元データ情報を明記し、エラー時に簡易メッセージを返す。
+- AC: 2〜3件のノート/インサイトからレポートビューを生成できる。
+- DoD: サンプルレポートを docs に保存し、重大エラー時のハンドリングを実装。
+
+#### Task B-5: 学びの履歴ビュー
+- ステータス: TODO
+- やること: insight_feedback + insight_notes を集約し、/history でタイムライン + タグクラウドを表示。期間フィルタと元ノートリンクを提供。
+- AC: 重要インサイトが日付順で閲覧でき、期間絞り込みが可能。
+- DoD: ダミーデータ含むタイムラインを確認し、カードから元ノート/インサイト詳細へ遷移可能。
+
+### テーマC: ダッシュボード操作強化
+#### Task C-1: ダッシュボード構成の状態管理と API 化
+- ステータス: TODO
+- やること: DashboardConfig 型を定義し、`dashboard_instances` に config_json を保存する `GET/PUT /dashboards/{id}` を実装。再読み込みで構成を復元。
+- AC: 現在のダッシュボード構成が JSON で保存/復元される。
+- DoD: DashboardConfig スキーマを docs に明記し、1ケースで保存→再読み込み→復元を確認。
+
+#### Task C-2: 「ダッシュボード編集」DSPy/ツール定義
+- ステータス: TODO
+- やること: DSPy EditDashboardConfig モジュールを作成し、Node `/api/agent/interactive` に editDashboard ツールを追加。代表的な編集指示の Before/After サンプルを残す。
+- AC: 棒→折れ線、上位N件、地域色分けなどの指示が config に反映され、不正カラムはエラーになる。
+- DoD: 3〜5 個の編集指示サンプルとプロンプト制約をコード/コメントに残す。
+
+#### Task C-3: What-if シミュレーション API + UI
+- ステータス: TODO
+- やること: `POST /analysis/what-if` を実装し、query_spec + 変化指標/率からベース vs シミュレーション結果を返却。フロントでモーダル入力と差分グラフを表示。
+- AC: 「Aを+10%したらBがどうなるか」をグラフ比較でき、異常入力時に警告/エラーが出る。
+- DoD: What-if 結果のサンプルを docs に残し、比例/回帰などの仮定を明記。
+
+### テーマD: 信頼感と運用性
+#### Task D-1: データセット更新情報 & ディスクレーマー表示
+- ステータス: TODO
+- やること: datasets に `last_updated_at/source_description/warning_text` を追加し、ダッシュボードやノートに更新日・注意文を表示。
+- AC: ダッシュボードに更新日とディスクレーマーが表示される。
+- DoD: warning_text を設定した dataset で UI 表示を確認し、仕様を docs に記載。
+
+#### Task D-2: データ更新に伴う再実行候補一覧
+- ステータス: TODO
+- やること: experiments/analysis_recipes に last_run_at を保持し、`GET /rerun-candidates` で datasets.last_updated_at を超えるものを抽出。/settings or /maintenance で一覧 + 再実行ボタンを提供。
+- AC: データ更新後に再実行候補がリスト化され、1件以上を再実行できる。
+- DoD: 更新→候補抽出→再実行→完了までを手動確認し、実行時データ時点が UI で確認できる。
+
+#### Task D-3: 軽量ログダッシュボード（運用者向け）
+- ステータス: TODO
+- やること: 集計ビュー or テーブルで期間別/観点別利用状況をまとめ、`GET /admin/stats` と /admin/stats UI を追加。期間フィルタと棒/折れ線グラフ表示、簡易認証を検討。
+- AC: 直近7日/30日の利用状況と観点テンプレートの使用回数ランキングを確認できる。
+- DoD: ダッシュボードサンプルスクショを docs に残し、最低限の認証で一般ユーザーから隠蔽。
+
+### テーマE: 先進分析 UX
+#### Task E-1: 自治体クラスタリング & ペルソナ生成
+- ステータス: TODO
+- やること: `POST /analysis/clusters` を追加し、標準化→k-means→クラスタ統計→LLM 要約を行う。/clusters で地図/テーブル表示とペルソナカードを提供。
+- AC: k=3 以上で異なる特徴説明が返り、同クラスタ自治体を UI でハイライトできる。
+- DoD: クラスタ JSON とペルソナ例を docs に残し、欠損/極端値の扱いをコード/コメントに明記。
+
+#### Task E-2: モデル比較（マルチモデル A/B UI）
+- ステータス: TODO
+- やること: Node `/api/agent/compare` を実装し、同じ question/datasetId を複数プロバイダで実行。/compare で回答を横並び表示し、モデル一覧を設定ファイルに集約。
+- AC: 2モデル以上の回答を並べて表示し、実際にバックエンド分析にアクセスしている。
+- DoD: 代表質問の差分例を docs に残し、モデル選択肢を定数/設定にまとめる。
