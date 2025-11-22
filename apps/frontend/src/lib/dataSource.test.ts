@@ -6,8 +6,19 @@ import {
     buildCategoryTable,
     buildMonthlySeries,
     deriveChatIntent,
+    resolveDataMode,
     summarizeRecords
 } from './dataSource';
+
+describe('resolveDataMode', () => {
+    it('prefers Vite-provided env values before falling back to dummy', () => {
+        expect(resolveDataMode({ VITE_DATA_MODE: 'api' })).toBe('api');
+    });
+
+    it('falls back to dummy when no env flag is provided', () => {
+        expect(resolveDataMode({})).toBe('dummy');
+    });
+});
 
 describe('dataSource utilities', () => {
     const dataset = visualizationDatasets['population-trend'];

@@ -11,7 +11,7 @@
     "lint": "eslint src --max-warnings=0",
     "format": "prettier --check \"src/**/*.{ts,tsx,css}\" vite.config.ts vitest.config.ts jest.config.cjs index.html",
     "test": "npm run test:jest && npm run test:vitest",
-    "test:jest": "jest --passWithNoTests",
+    "test:jest": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests",
     "test:vitest": "vitest run --passWithNoTests"
   },
   "dependencies": {
