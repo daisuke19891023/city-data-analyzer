@@ -7,7 +7,7 @@ import hashlib
 import json
 import re
 from collections import Counter
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any, Iterable, TypedDict
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -21,6 +21,22 @@ from clean_interfaces.db_models import (
     OpenDataCategory,
 )
 from clean_interfaces.database import init_db
+
+
+class ColumnMetadata(TypedDict):
+    name: str
+    data_type: str
+    description: str | None
+    is_index: bool
+
+
+class DatasetMetadata(TypedDict):
+    id: int
+    slug: str
+    name: str
+    description: str | None
+    year: int | None
+    columns: list[ColumnMetadata]
 
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from pathlib import Path
@@ -187,14 +203,14 @@ class DatasetRepository:
                 rows.append(parsed_row)
             return rows
 
-    def get_dataset_metadata(self, dataset_id: int) -> dict[str, Any]:
+    def get_dataset_metadata(self, dataset_id: int) -> DatasetMetadata:
         """Return metadata (slug/name/description/year/columns) for a dataset."""
         dataset = self.session.get(Dataset, dataset_id)
         if not dataset:
             msg = f"Dataset {dataset_id} not found"
             raise ValueError(msg)
 
-        columns = [
+        columns: list[ColumnMetadata] = [
             {
                 "name": col.name,
                 "data_type": col.data_type,
@@ -214,12 +230,12 @@ class DatasetRepository:
             "columns": columns,
         }
 
-    def list_datasets(self) -> list[dict[str, Any]]:
+    def list_datasets(self) -> list[DatasetMetadata]:
         """List datasets with their column metadata."""
         datasets = self.session.execute(select(Dataset)).scalars().all()
         return [self.get_dataset_metadata(dataset.id) for dataset in datasets]
 
-    def get_datasets_metadata(self, datasets: list[Dataset]) -> list[dict[str, Any]]:
+    def get_datasets_metadata(self, datasets: list[Dataset]) -> list[DatasetMetadata]:
         """Return metadata for a list of dataset entities."""
         return [self.get_dataset_metadata(dataset.id) for dataset in datasets]
 

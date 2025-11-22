@@ -9,13 +9,14 @@ if TYPE_CHECKING:
 
 from clean_interfaces.models.dspy import QueryMetric, QueryOrder, QuerySpecModel
 from clean_interfaces.models.experiments import PlannedJob
+from clean_interfaces.services.datasets import DatasetMetadata
 
 
 class PlanExperiments:
     """Generate experiment jobs from a goal and dataset metadata."""
 
     def plan(
-        self, goal_description: str, datasets_meta: Iterable[dict],
+        self, goal_description: str, datasets_meta: Iterable[DatasetMetadata],
     ) -> list[PlannedJob]:
         """Create planned jobs for each dataset based on the goal."""
         jobs: list[PlannedJob] = []
