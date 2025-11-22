@@ -1,4 +1,4 @@
-"""Lightweight FastAPI stubs for pyright strict type checking."""
+# ruff: noqa: N818
 
 from collections.abc import Callable
 from typing import Any, TypeVar
@@ -18,17 +18,31 @@ class HTTPException(Exception):
     detail: Any
     headers: dict[str, str] | None
 
-    def __init__(self, status_code: int, detail: Any = ..., headers: dict[str, str] | None = None) -> None: ...
+    def __init__(
+        self,
+        status_code: int,
+        detail: Any = ...,
+        headers: dict[str, str] | None = None,
+    ) -> None: ...
 
 
 class _Depends:
     dependency: Callable[..., Any] | None
     use_cache: bool
 
-    def __init__(self, dependency: Callable[..., Any] | None = None, *, use_cache: bool = True) -> None: ...
+    def __init__(
+        self,
+        dependency: Callable[..., Any] | None = None,
+        *,
+        use_cache: bool = True,
+    ) -> None: ...
 
 
-def Depends(dependency: Callable[..., Any] | None = None, *, use_cache: bool = True) -> _Depends: ...
+def Depends(
+    dependency: Callable[..., Any] | None = None,
+    *,
+    use_cache: bool = True,
+) -> _Depends: ...
 
 
 class _Status:

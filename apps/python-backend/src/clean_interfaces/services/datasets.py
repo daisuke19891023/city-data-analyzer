@@ -7,7 +7,7 @@ import hashlib
 import json
 import re
 from collections import Counter
-from typing import TYPE_CHECKING, Any, Iterable, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -24,6 +24,8 @@ from clean_interfaces.database import init_db
 
 
 class ColumnMetadata(TypedDict):
+    """Metadata for a dataset column."""
+
     name: str
     data_type: str
     description: str | None
@@ -31,6 +33,8 @@ class ColumnMetadata(TypedDict):
 
 
 class DatasetMetadata(TypedDict):
+    """Metadata describing a dataset and its columns."""
+
     id: int
     slug: str
     name: str
@@ -40,6 +44,7 @@ class DatasetMetadata(TypedDict):
 
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from pathlib import Path
+    from collections.abc import Iterable
     from sqlalchemy.orm import Session
 
 DEFAULT_OPEN_DATA_CATEGORIES: list[tuple[str, str]] = [

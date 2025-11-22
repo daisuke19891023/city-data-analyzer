@@ -4,15 +4,16 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from clean_interfaces.models.dspy import (
-    QueryFilterDict,
-    QueryMetricDict,
-    QueryOrderDict,
-    QuerySpecDict,
-)
-from clean_interfaces.services.datasets import ColumnMetadata, DatasetMetadata
+if TYPE_CHECKING:
+    from clean_interfaces.models.dspy import (
+        QueryFilterDict,
+        QueryMetricDict,
+        QueryOrderDict,
+        QuerySpecDict,
+    )
+    from clean_interfaces.services.datasets import ColumnMetadata, DatasetMetadata
 
 
 @dataclass
@@ -27,7 +28,7 @@ class QuerySpec:
 
     def model_dump(self) -> QuerySpecDict:
         """Return a plain dictionary representation."""
-        return cast(QuerySpecDict, {
+        return cast("QuerySpecDict", {
             "filters": self.filters,
             "group_by": self.group_by,
             "metrics": self.metrics,

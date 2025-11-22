@@ -256,8 +256,7 @@ class RestAPIInterface(BaseInterface):
             db: db_dep,
         ) -> list[DatasetMetadata]:
             repo = DatasetRepository(db)
-            datasets = repo.list_datasets()
-            return datasets
+            return repo.list_datasets()
 
     def _setup_interactive_routes(self) -> None:
         @self.app.post(

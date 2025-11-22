@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from clean_interfaces.models.dspy import QueryMetric, QueryOrder, QuerySpecModel
+from clean_interfaces.models.experiments import PlannedJob
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-from clean_interfaces.models.dspy import QueryMetric, QueryOrder, QuerySpecModel
-from clean_interfaces.models.experiments import PlannedJob
-from clean_interfaces.services.datasets import DatasetMetadata
+    from clean_interfaces.services.datasets import DatasetMetadata
 
 
 class PlanExperiments:

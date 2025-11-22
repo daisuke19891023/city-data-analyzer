@@ -2,15 +2,21 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Mapping, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import pandas as pd
 
-from clean_interfaces.models.dspy import QueryFilterDict, QueryMetricDict, QuerySpecDict
 from clean_interfaces.services.datasets import DatasetRepository
 
 if TYPE_CHECKING:  # pragma: no cover - type checking imports
+    from collections.abc import Mapping
     from sqlalchemy.orm import Session
+
+    from clean_interfaces.models.dspy import (
+        QueryFilterDict,
+        QueryMetricDict,
+        QuerySpecDict,
+    )
 
 class QueryValidationError(ValueError):
     """Raised when a query spec references invalid columns."""
@@ -28,7 +34,7 @@ class QueryRunner:
 
     def run(self, dataset_id: int, query_spec: Mapping[str, Any]) -> dict[str, Any]:
         """Execute the provided query spec and return data, summary, and schema."""
-        spec_dict = cast(QuerySpecDict, dict(query_spec))
+        spec_dict = cast("QuerySpecDict", dict(query_spec))
         dataset_meta = self.repo.get_dataset_metadata(dataset_id)
         valid_columns = {col["name"] for col in dataset_meta["columns"]}
         self._validate(spec_dict, valid_columns)
@@ -43,7 +49,10 @@ class QueryRunner:
 
         summary = self._build_summary(frame, result_frame, spec_dict)
         return {
-            "data": cast(list[dict[str, Any]], result_frame.to_dict(orient="records")),
+            "data": cast(
+                "list[dict[str, Any]]",
+                result_frame.to_dict(orient="records"),
+            ),
             "summary": summary,
             "schema": dataset_meta["columns"],
         }
@@ -84,7 +93,7 @@ class QueryRunner:
             col for col in frame.columns if col not in valid_columns
         ]
         if missing_columns:
-            frame = cast(pd.DataFrame, frame.drop(columns=missing_columns))
+            frame = cast("pd.DataFrame", frame.drop(columns=missing_columns))
         return frame
 
     def _apply_filters(
@@ -151,10 +160,13 @@ class QueryRunner:
             aggregated.columns, pd.MultiIndex,
         ):
             flattened: list[str] = []
-            flat_index: list[object] = cast(list[object], aggregated.columns.to_flat_index())
+            flat_index: list[object] = cast(
+                "list[object]",
+                aggregated.columns.to_flat_index(),
+            )
             for raw_cols_obj in flat_index:
                 raw_cols: object = raw_cols_obj
-                cols: tuple[str, ...] | str = cast(tuple[str, ...] | str, raw_cols)
+                cols: tuple[str, ...] | str = cast("tuple[str, ...] | str", raw_cols)
                 if isinstance(cols, tuple):
                     parts: list[str] = [str(part) for part in cols if part]
                 else:

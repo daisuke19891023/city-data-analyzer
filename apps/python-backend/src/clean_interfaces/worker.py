@@ -10,13 +10,13 @@ from sqlalchemy import select
 
 from clean_interfaces.database import get_engine, session_scope
 from clean_interfaces.db_models import Experiment, ExperimentJob, InsightCandidate
-from clean_interfaces.models.dspy import QuerySpecDict
 from clean_interfaces.services.datasets import init_database
 from clean_interfaces.services.query_runner import QueryRunner
 
 POLL_INTERVAL_SECONDS = 3
 
 if TYPE_CHECKING:
+    from clean_interfaces.models.dspy import QuerySpecDict
     from sqlalchemy.orm import Session
 
 
@@ -52,7 +52,7 @@ class ExperimentWorker:
 
             runner = QueryRunner(session)
             try:
-                query_spec = cast(QuerySpecDict, job.query_spec or {})
+                query_spec = cast("QuerySpecDict", job.query_spec or {})
                 result = runner.run(job.dataset_id, query_spec)
                 summary = result.get("summary", {})
                 description = self._build_description(job, summary)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from typing import Any
 
 from sqlalchemy import (
@@ -50,7 +50,7 @@ class Dataset(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
+        DateTime, default=lambda: datetime.now(UTC), nullable=False,
     )
 
     category: Mapped[OpenDataCategory] = relationship(
@@ -106,7 +106,7 @@ class DatasetRecord(Base):
     )
     row_hash: Mapped[str] = mapped_column(String(128), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
+        DateTime, default=lambda: datetime.now(UTC), nullable=False,
     )
 
     dataset: Mapped[Dataset] = relationship("Dataset", back_populates="records")
@@ -127,7 +127,7 @@ class AnalysisQuery(Base):
     provider: Mapped[str | None] = mapped_column(String(100), nullable=True)
     model: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
+        DateTime, default=lambda: datetime.now(UTC), nullable=False,
     )
 
     dataset: Mapped[Dataset] = relationship("Dataset", back_populates="analyses")
@@ -145,7 +145,7 @@ class DatasetFile(Base):
     path: Mapped[str] = mapped_column(String(500), nullable=False)
     file_type: Mapped[str] = mapped_column(String(50), nullable=False, default="csv")
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
+        DateTime, default=lambda: datetime.now(UTC), nullable=False,
     )
 
     dataset: Mapped[Dataset] = relationship("Dataset", back_populates="files")
@@ -161,10 +161,10 @@ class Experiment(Base):
     dataset_ids: Mapped[list[int]] = mapped_column(JSON, nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="pending", nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
+        DateTime, default=lambda: datetime.now(UTC), nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
+        DateTime, default=lambda: datetime.now(UTC), nullable=False,
     )
 
     jobs: Mapped[list[ExperimentJob]] = relationship(
@@ -191,10 +191,10 @@ class ExperimentJob(Base):
     status: Mapped[str] = mapped_column(String(50), default="pending", nullable=False)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
+        DateTime, default=lambda: datetime.now(UTC), nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
+        DateTime, default=lambda: datetime.now(UTC), nullable=False,
     )
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -222,7 +222,7 @@ class InsightCandidate(Base):
     adopted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     feedback_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
+        DateTime, default=lambda: datetime.now(UTC), nullable=False,
     )
 
     experiment: Mapped[Experiment] = relationship(
@@ -248,7 +248,7 @@ class InsightFeedback(Base):
     decision: Mapped[str] = mapped_column(String(50), nullable=False)
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False,
+        DateTime, default=lambda: datetime.now(UTC), nullable=False,
     )
 
     candidate: Mapped[InsightCandidate] = relationship(

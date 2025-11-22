@@ -14,11 +14,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from sqlalchemy import create_engine
-from sqlalchemy.engine import Engine, Connection
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
+    from sqlalchemy.engine import Connection, Engine
     from collections.abc import Generator
 
 Base = declarative_base()
