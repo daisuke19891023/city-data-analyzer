@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from './App';
 
 describe('App component (Vitest)', () => {
@@ -27,6 +27,27 @@ describe('App component (Vitest)', () => {
         expect(screen.getByLabelText('データに関する質問')).toHaveAttribute(
             'placeholder',
             expect.stringContaining('6ヶ月')
+        );
+    });
+
+    it('toggles between light and dark themes', async () => {
+        render(<App />);
+
+        await waitFor(() => {
+            expect(document.documentElement.dataset.theme).toBeDefined();
+        });
+
+        const toggleButton = await screen.findByRole('button', {
+            name: /モードに切り替え/
+        });
+
+        const initialTheme = document.documentElement.dataset.theme;
+        fireEvent.click(toggleButton);
+
+        const nextTheme = document.documentElement.dataset.theme;
+        expect(nextTheme).not.toBe(initialTheme);
+        expect(toggleButton.getAttribute('aria-label')).toMatch(
+            /モードに切り替え/
         );
     });
 });
