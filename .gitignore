@@ -129,6 +129,9 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+# Nested environment directories for monorepo layout
+**/.venv/
+**/.uv/
 
 # Spyder project settings
 .spyderproject
@@ -166,6 +169,11 @@ uv.lock
 # --- Virtual envs & uv cache -------------------------------
 .venv/
 .uv/
+
+# --- Frontend build outputs --------------------------------
+apps/frontend/node_modules/
+apps/frontend/.next/
+apps/frontend/out/
 
 # --- Tooling -----------------------------------------------
 .nox/
