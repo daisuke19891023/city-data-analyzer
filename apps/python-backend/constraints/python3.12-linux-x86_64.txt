@@ -38,7 +38,7 @@ charset-normalizer==3.4.2
     # via
     #   commitizen
     #   requests
-click==8.3.0
+click==8.1.7
     # via
     #   click-option-group
     #   hatch
@@ -493,7 +493,7 @@ wcwidth==0.2.13
     # via prompt-toolkit
 wheel==0.45.1
     # via scalene
-wrapt==2.0.0
+wrapt==1.16.0
     # via
     #   deprecated
     #   opentelemetry-instrumentation
