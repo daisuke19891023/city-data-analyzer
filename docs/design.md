@@ -6,21 +6,24 @@
 - **データフロー（バッチ探索）**: 実験作成 → DSPy PlanExperiments でジョブ生成 → ワーカーが DB を参照し集計 → insight_candidates 保存 → フロントでレビュー。
 
 ## バックエンド設計 (apps/python-backend)
-- **DB レイヤ**: SQLAlchemy/Alembic を想定。
-  - `datasets`: データセットメタ (name, source, schema_meta など)。
-  - `dataset_rows`: 汎用 JSONB (`row_json`) で人口統計などを保持。必要に応じてインデックスを追加。
-  - `analysis_queries`: NL 質問と生成された query_spec、実行統計、program_version を保存。
-  - フェーズ4以降で `experiments`, `experiment_jobs`, `insight_candidates`, `insight_feedback` を追加。
+- **DB レイヤ**: SQLAlchemy/Alembic を想定。柔軟なオープンデータ取り込みに対応する汎用スキーマを採用。
+  - `open_data_categories`: 川崎市オープンデータの12カテゴリを初期登録。`slug` を英小文字で管理。
+  - `datasets`: データセット定義 (category_id, slug, name, description, source_url, dataset_year)。
+  - `dataset_columns`: 各 CSV の列定義 (column_name, data_type, column_order, is_index, description)。
+  - `dataset_records`: CSV 1行を `row_json` (JSONB) に保持し、抽出したキーを `index_cols` (JSONB) に格納。idempotent なロードを想定。
+  - 任意で `dataset_files` を追加し、元 CSV ファイル名やハッシュを保存可能。
+  - `analysis_queries`: NL 質問と生成された query_spec、実行統計、program_version、dataset_id/dataset_version を保存。
+  - フェーズ4以降で `experiments`, `experiment_jobs`, `insight_candidates`, `insight_feedback` を追加し、結合キーには `dataset_columns.is_index` を活用。
 - **DSPy モジュール**:
-  - `NL2QuerySpecSig/Module`: question + dataset_meta → query_spec(JSON)。LM は `configure_lm(provider, model)` で切替。
-  - `InteractiveAnalysisProgram`: NL2QuerySpec → QueryRunner → SummarizeInsight の Module チェーン。
-  - `PlanExperiments`: goal_description + datasets_meta → jobs (後続でワーカーが処理)。
+  - `NL2QuerySpecSig/Module`: question + dataset_meta (dataset_columns, index_cols 説明) → query_spec(JSON)。LM は `configure_lm(provider, model)` で切替し、日本語カラム名にそのまま対応。
+  - `InteractiveAnalysisProgram`: NL2QuerySpec → QueryRunner → SummarizeInsight の Module チェーン。query_runner は JSONB 抽出で SQL を動的生成。
+  - `PlanExperiments`: goal_description + datasets_meta → jobs (後続でワーカーが処理)。dataset_ids を持つ query_spec を前提にする。
 - **API**:
-  - `POST /analysis/query`: {dataset_id, query_spec} → {data, summary, schema}。バリデーションで400を返す。
-  - `POST /dspy/interactive`: {question, dataset_id, provider, model} → {query_spec, stats, insight_title, insight_description}。
+  - `POST /analysis/query`: {dataset_id, query_spec} → {data, summary, schema}。JSONB 抽出 + バインドパラメータで SQL インジェクションを防ぎ、バリデーションで400を返す。
+  - `POST /dspy/interactive`: {question, dataset_id, provider, model} → {query_spec, stats, insight_title, insight_description}。dataset_meta をプログラムに渡す。
   - フェーズ4で `/experiments` 系 API を追加。
 - **ETL/スクリプト**:
-  - `scripts/load_population.py`（案）: 人口統計 CSV を datasets/dataset_rows にロード。idempotent を明記。
+  - `scripts/load_csv.py`: カテゴリ slug・dataset slug・CSV パス・データセット名・説明・年度を受け取り、dataset/dataset_columns/dataset_records を作成。ヘッダからカラムを生成し、year/ward_code など index_cols を抽出。再実行で重複を避ける冪等設計。
   - フィードバック→trainset 生成スクリプトをフェーズ5で追加。
 
 ## フロントエンド設計 (apps/frontend)
