@@ -6,9 +6,15 @@ import * as backendClient from '../lib/backendClient';
 
 vi.mock('../lib/backendClient');
 
-const mockedFetchExperimentDetail = vi.mocked(backendClient.fetchExperimentDetail);
-const mockedFetchInsightCandidates = vi.mocked(backendClient.fetchInsightCandidates);
-const mockedSubmitInsightFeedback = vi.mocked(backendClient.submitInsightFeedback);
+const mockedFetchExperimentDetail = vi.mocked(
+    backendClient.fetchExperimentDetail
+);
+const mockedFetchInsightCandidates = vi.mocked(
+    backendClient.fetchInsightCandidates
+);
+const mockedSubmitInsightFeedback = vi.mocked(
+    backendClient.submitInsightFeedback
+);
 
 describe('ExperimentDetailPage', () => {
     beforeEach(() => {
@@ -58,9 +64,12 @@ describe('ExperimentDetailPage', () => {
         mockedSubmitInsightFeedback.mockResolvedValue();
 
         render(
-            <MemoryRouter initialEntries={[`/experiments/5`]}> 
+            <MemoryRouter initialEntries={[`/experiments/5`]}>
                 <Routes>
-                    <Route path="/experiments/:id" element={<ExperimentDetailPage />} />
+                    <Route
+                        path="/experiments/:id"
+                        element={<ExperimentDetailPage />}
+                    />
                 </Routes>
             </MemoryRouter>
         );
@@ -75,7 +84,11 @@ describe('ExperimentDetailPage', () => {
         fireEvent.click(screen.getByRole('button', { name: '採用' }));
 
         await waitFor(() => {
-            expect(mockedSubmitInsightFeedback).toHaveBeenCalledWith(100, 'adopted', 'これは採用');
+            expect(mockedSubmitInsightFeedback).toHaveBeenCalledWith(
+                100,
+                'adopted',
+                'これは採用'
+            );
         });
 
         await waitFor(() => {

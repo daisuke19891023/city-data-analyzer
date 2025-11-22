@@ -17,12 +17,24 @@ describe('ExperimentsPage', () => {
 
     it('renders dataset checkboxes and updates status after creation', async () => {
         mockedFetchDatasets.mockResolvedValue([
-            { id: 1, name: '人口推移データセット', description: null, year: 2023 },
+            {
+                id: 1,
+                name: '人口推移データセット',
+                description: null,
+                year: 2023
+            },
             { id: 2, name: '交通量データセット', description: null, year: 2022 }
         ]);
         mockedListExperiments
             .mockResolvedValueOnce([])
-            .mockResolvedValue([{ id: 11, goal_description: 'goal', status: 'pending', dataset_ids: [1] }]);
+            .mockResolvedValue([
+                {
+                    id: 11,
+                    goal_description: 'goal',
+                    status: 'pending',
+                    dataset_ids: [1]
+                }
+            ]);
         mockedCreateExperiment.mockResolvedValue(42);
 
         render(
@@ -32,7 +44,9 @@ describe('ExperimentsPage', () => {
         );
 
         await waitFor(() => {
-            expect(screen.getByText('人口推移データセット')).toBeInTheDocument();
+            expect(
+                screen.getByText('人口推移データセット')
+            ).toBeInTheDocument();
             expect(screen.getByText('交通量データセット')).toBeInTheDocument();
         });
 

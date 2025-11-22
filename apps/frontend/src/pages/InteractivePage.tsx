@@ -143,155 +143,146 @@ export function InteractivePage(): JSX.Element {
     return (
         <div className="app-container">
             <section className="hero" aria-labelledby="app-heading">
-                    <div className="hero__title">
-                        <div>
-                            <h1 id="app-heading">City Data Analyzer</h1>
-                            <p className="hero__subtitle">
-                                都市データのダッシュボードとVercel AI
-                                SDKを組み合わせて、 Pythonの /dspy/interactive
-                                から返るインサイトをストリーミング表示します。
-                            </p>
-                        </div>
-                        <div className="actions-row">
-                            <Button variant="ghost">共有リンクをコピー</Button>
-                            <Button>AI提案を実行</Button>
-                        </div>
+                <div className="hero__title">
+                    <div>
+                        <h1 id="app-heading">City Data Analyzer</h1>
+                        <p className="hero__subtitle">
+                            都市データのダッシュボードとVercel AI
+                            SDKを組み合わせて、 Pythonの /dspy/interactive
+                            から返るインサイトをストリーミング表示します。
+                        </p>
                     </div>
-                    <div
-                        className="control-row"
-                        aria-label="データセットとプロバイダー選択"
-                    >
-                        <div className="control-group">
-                            <label htmlFor="dataset-select">データセット</label>
-                            <select
-                                id="dataset-select"
-                                value={datasetId}
-                                onChange={(event) => {
-                                    const nextId = event.target.value;
-                                    setDatasetId(nextId);
-                                    resetDashboard(nextId);
-                                }}
-                            >
-                                {datasetOptions.map((option) => (
-                                    <option key={option.id} value={option.id}>
-                                        {option.label} — {option.helper}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="control-group">
-                            <label htmlFor="provider-select">
-                                LLM Provider
-                            </label>
-                            <select
-                                id="provider-select"
-                                value={provider}
-                                onChange={(event) => {
-                                    const nextProvider = event.target.value;
-                                    setProvider(nextProvider);
-                                    setModel(modelCandidates[nextProvider][0]);
-                                }}
-                            >
-                                {providerOptions.map((option) => (
-                                    <option
-                                        key={option.value}
-                                        value={option.value}
-                                    >
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="control-group">
-                            <label htmlFor="model-select">モデル</label>
-                            <select
-                                id="model-select"
-                                value={model}
-                                onChange={(event) =>
-                                    setModel(event.target.value)
-                                }
-                            >
-                                {availableModels.map((candidate) => (
-                                    <option key={candidate} value={candidate}>
-                                        {candidate}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                    <div className="actions-row">
+                        <Button variant="ghost">共有リンクをコピー</Button>
+                        <Button>AI提案を実行</Button>
                     </div>
-                </section>
-
-                <section
-                    className="two-column"
-                    aria-label="チャットとダッシュボード"
+                </div>
+                <div
+                    className="control-row"
+                    aria-label="データセットとプロバイダー選択"
                 >
-                    <Card className="chat-card">
-                        <CardHeader>
-                            <CardTitle>インタラクティブチャット</CardTitle>
-                            <CardDescription>
-                                useChat(
-                                {`{ body: { provider: '${provider}', model: '${model}' } }`}
-                                ) で Pythonバックエンドをツール呼び出しします。
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="chat-panel">
-                            <div className="chat-messages" aria-live="polite">
-                                {messages.map((message, index) => (
-                                    <ChatMessage
-                                        key={`${message.id}-${index}`}
-                                        role={
-                                            message.role === 'assistant'
-                                                ? 'assistant'
-                                                : 'user'
-                                        }
-                                        content={message.content}
-                                        tone={
-                                            message.role === 'assistant'
-                                                ? 'action'
-                                                : 'neutral'
-                                        }
-                                    />
-                                ))}
-                            </div>
-                            <div className="status-row" aria-live="polite">
-                                <Badge
-                                    variant={isLoading ? 'accent' : 'success'}
-                                >
-                                    {status}
-                                </Badge>
-                            </div>
-                            <form className="chat-input" onSubmit={onSubmit}>
-                                <input
-                                    aria-label="AIへの質問"
-                                    value={input}
-                                    onChange={handleInputChange}
-                                    placeholder="例: 人口推移と移動パターンから夜間ピークを教えて"
+                    <div className="control-group">
+                        <label htmlFor="dataset-select">データセット</label>
+                        <select
+                            id="dataset-select"
+                            value={datasetId}
+                            onChange={(event) => {
+                                const nextId = event.target.value;
+                                setDatasetId(nextId);
+                                resetDashboard(nextId);
+                            }}
+                        >
+                            {datasetOptions.map((option) => (
+                                <option key={option.id} value={option.id}>
+                                    {option.label} — {option.helper}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="control-group">
+                        <label htmlFor="provider-select">LLM Provider</label>
+                        <select
+                            id="provider-select"
+                            value={provider}
+                            onChange={(event) => {
+                                const nextProvider = event.target.value;
+                                setProvider(nextProvider);
+                                setModel(modelCandidates[nextProvider][0]);
+                            }}
+                        >
+                            {providerOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="control-group">
+                        <label htmlFor="model-select">モデル</label>
+                        <select
+                            id="model-select"
+                            value={model}
+                            onChange={(event) => setModel(event.target.value)}
+                        >
+                            {availableModels.map((candidate) => (
+                                <option key={candidate} value={candidate}>
+                                    {candidate}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <section
+                className="two-column"
+                aria-label="チャットとダッシュボード"
+            >
+                <Card className="chat-card">
+                    <CardHeader>
+                        <CardTitle>インタラクティブチャット</CardTitle>
+                        <CardDescription>
+                            useChat(
+                            {`{ body: { provider: '${provider}', model: '${model}' } }`}
+                            ) で Pythonバックエンドをツール呼び出しします。
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="chat-panel">
+                        <div className="chat-messages" aria-live="polite">
+                            {messages.map((message, index) => (
+                                <ChatMessage
+                                    key={`${message.id}-${index}`}
+                                    role={
+                                        message.role === 'assistant'
+                                            ? 'assistant'
+                                            : 'user'
+                                    }
+                                    content={message.content}
+                                    tone={
+                                        message.role === 'assistant'
+                                            ? 'action'
+                                            : 'neutral'
+                                    }
                                 />
-                                <Button type="submit" disabled={isLoading}>
-                                    {isLoading ? '送信中...' : '送信'}
-                                </Button>
-                            </form>
-                        </CardContent>
-                    </Card>
+                            ))}
+                        </div>
+                        <div className="status-row" aria-live="polite">
+                            <Badge variant={isLoading ? 'accent' : 'success'}>
+                                {status}
+                            </Badge>
+                        </div>
+                        <form className="chat-input" onSubmit={onSubmit}>
+                            <input
+                                aria-label="AIへの質問"
+                                value={input}
+                                onChange={handleInputChange}
+                                placeholder="例: 人口推移と移動パターンから夜間ピークを教えて"
+                            />
+                            <Button type="submit" disabled={isLoading}>
+                                {isLoading ? '送信中...' : '送信'}
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
 
-                    <Dashboard
-                        data={dashboard}
-                        lastInsight={lastInsight}
-                        onRefresh={() => resetDashboard(datasetId)}
-                    />
-                </section>
+                <Dashboard
+                    data={dashboard}
+                    lastInsight={lastInsight}
+                    onRefresh={() => resetDashboard(datasetId)}
+                />
+            </section>
 
-                <section aria-label="可視化の雛形" className="two-column">
-                    <ChartPlaceholder
-                        title="実験ジョブの完了率"
-                        description="Node APIとPythonの連携結果を表示"
-                        callout="フロントエンドのみで雛形を構築し、バックエンドの応答を待ち受けます。"
-                    />
-                    <ChartPlaceholder
-                        title="モデル別レスポンス時間"
-                        description="プロバイダー切替時の参考情報"
-                        callout="openai/anthropic/google を同一UIで流用可能な構造"
-                    />
+            <section aria-label="可視化の雛形" className="two-column">
+                <ChartPlaceholder
+                    title="実験ジョブの完了率"
+                    description="Node APIとPythonの連携結果を表示"
+                    callout="フロントエンドのみで雛形を構築し、バックエンドの応答を待ち受けます。"
+                />
+                <ChartPlaceholder
+                    title="モデル別レスポンス時間"
+                    description="プロバイダー切替時の参考情報"
+                    callout="openai/anthropic/google を同一UIで流用可能な構造"
+                />
             </section>
 
             <p className="footer-note">

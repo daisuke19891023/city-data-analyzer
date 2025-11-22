@@ -45,18 +45,21 @@ export async function runInteractiveAnalysis(
     payload: InteractiveAnalysisRequest
 ): Promise<InteractiveAnalysisResponse> {
     try {
-        const response = await fetch(`${resolveBackendBase()}/dspy/interactive`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                question: payload.question,
-                dataset_id: payload.datasetId,
-                provider: payload.provider,
-                model: payload.model
-            })
-        });
+        const response = await fetch(
+            `${resolveBackendBase()}/dspy/interactive`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    question: payload.question,
+                    dataset_id: payload.datasetId,
+                    provider: payload.provider,
+                    model: payload.model
+                })
+            }
+        );
 
         if (!response.ok) {
             throw new Error(`Failed to reach backend: ${response.status}`);
@@ -96,15 +99,36 @@ async function safeFetch<T>(
 }
 
 export async function fetchDatasets(): Promise<
-    { id: number; name: string; description?: string | null; year?: number | null }[]
+    {
+        id: number;
+        name: string;
+        description?: string | null;
+        year?: number | null;
+    }[]
 > {
-    const data = await safeFetch<
-        { id: number; name: string; description?: string | null; year?: number | null }[]
-    >('/datasets');
+    const data =
+        await safeFetch<
+            {
+                id: number;
+                name: string;
+                description?: string | null;
+                year?: number | null;
+            }[]
+        >('/datasets');
     return (
         data || [
-            { id: 1, name: '人口推移 (サンプル)', description: 'Fallback dataset', year: 2023 },
-            { id: 2, name: '子育て支援 (サンプル)', description: 'Fallback dataset', year: 2022 }
+            {
+                id: 1,
+                name: '人口推移 (サンプル)',
+                description: 'Fallback dataset',
+                year: 2023
+            },
+            {
+                id: 2,
+                name: '子育て支援 (サンプル)',
+                description: 'Fallback dataset',
+                year: 2022
+            }
         ]
     );
 }
@@ -128,42 +152,51 @@ export async function createExperiment(
 }
 
 export async function listExperiments(): Promise<
-    { id: number; goal_description: string; status: string; dataset_ids: number[] }[]
+    {
+        id: number;
+        goal_description: string;
+        status: string;
+        dataset_ids: number[];
+    }[]
 > {
     return (
         (await safeFetch<
-            { id: number; goal_description: string; status: string; dataset_ids: number[] }[]
+            {
+                id: number;
+                goal_description: string;
+                status: string;
+                dataset_ids: number[];
+            }[]
         >('/experiments')) || []
     );
 }
 
-export async function fetchExperimentDetail(
-    experimentId: number
-): Promise<
-    | {
-          id: number;
-          goal_description: string;
-          status: string;
-          dataset_ids: number[];
-          jobs: Array<{
-              id: number;
-              dataset_id: number;
-              job_type: string;
-              status: string;
-              description?: string | null;
-          }>;
-      }
-    | null
-> {
+export async function fetchExperimentDetail(experimentId: number): Promise<{
+    id: number;
+    goal_description: string;
+    status: string;
+    dataset_ids: number[];
+    jobs: Array<{
+        id: number;
+        dataset_id: number;
+        job_type: string;
+        status: string;
+        description?: string | null;
+    }>;
+} | null> {
     return await safeFetch(`/experiments/${experimentId}`);
 }
 
 export async function fetchInsightCandidates(
     experimentId: number
-): Promise<
-    { insights: Array<{ id: number; title: string; description: string; adopted: boolean }> }
-    | null
-> {
+): Promise<{
+    insights: Array<{
+        id: number;
+        title: string;
+        description: string;
+        adopted: boolean;
+    }>;
+} | null> {
     return await safeFetch(`/experiments/${experimentId}/insights`);
 }
 

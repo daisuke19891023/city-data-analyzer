@@ -51,34 +51,53 @@ export function ExperimentDetailPage(): JSX.Element {
                         <div key={job.id} className="job-item">
                             <div>
                                 <div className="job-title">{job.job_type}</div>
-                                <div className="job-desc">{job.description}</div>
+                                <div className="job-desc">
+                                    {job.description}
+                                </div>
                             </div>
-                            <div className={`badge badge--${job.status}`}>{job.status}</div>
+                            <div className={`badge badge--${job.status}`}>
+                                {job.status}
+                            </div>
                         </div>
                     ))}
                 </div>
             </section>
             <section className="card">
                 <h3>インサイト候補</h3>
-                {insights.length === 0 && <p>まだインサイトが生成されていません。</p>}
+                {insights.length === 0 && (
+                    <p>まだインサイトが生成されていません。</p>
+                )}
                 <div className="insight-grid">
                     {insights.map((insight) => (
                         <div key={insight.id} className="insight-card">
                             <div className="insight-card__header">
                                 <div>
-                                    <div className="insight-title">{insight.title}</div>
-                                    <div className="insight-meta">dataset #{insight.dataset_id}</div>
+                                    <div className="insight-title">
+                                        {insight.title}
+                                    </div>
+                                    <div className="insight-meta">
+                                        dataset #{insight.dataset_id}
+                                    </div>
                                 </div>
-                                <span className={`badge badge--${insight.adopted ? 'adopted' : 'pending'}`}>
+                                <span
+                                    className={`badge badge--${insight.adopted ? 'adopted' : 'pending'}`}
+                                >
                                     {insight.adopted ? '採用済み' : '未評価'}
                                 </span>
                             </div>
                             <p>{insight.description}</p>
                             <textarea
                                 placeholder="コメントを入力"
-                                value={comments[insight.id] || insight.feedback_comment || ''}
+                                value={
+                                    comments[insight.id] ||
+                                    insight.feedback_comment ||
+                                    ''
+                                }
                                 onChange={(event) =>
-                                    setComments({ ...comments, [insight.id]: event.target.value })
+                                    setComments({
+                                        ...comments,
+                                        [insight.id]: event.target.value
+                                    })
                                 }
                                 className="form__textarea"
                                 rows={2}
@@ -87,14 +106,24 @@ export function ExperimentDetailPage(): JSX.Element {
                                 <button
                                     className="button button--ghost"
                                     type="button"
-                                    onClick={() => void handleDecision(insight.id, 'rejected')}
+                                    onClick={() =>
+                                        void handleDecision(
+                                            insight.id,
+                                            'rejected'
+                                        )
+                                    }
                                 >
                                     却下
                                 </button>
                                 <button
                                     className="button"
                                     type="button"
-                                    onClick={() => void handleDecision(insight.id, 'adopted')}
+                                    onClick={() =>
+                                        void handleDecision(
+                                            insight.id,
+                                            'adopted'
+                                        )
+                                    }
                                 >
                                     採用
                                 </button>

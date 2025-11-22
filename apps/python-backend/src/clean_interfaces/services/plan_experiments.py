@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 from clean_interfaces.models.dspy import QueryMetric, QueryOrder, QuerySpecModel
 from clean_interfaces.models.experiments import PlannedJob
@@ -11,7 +14,10 @@ from clean_interfaces.models.experiments import PlannedJob
 class PlanExperiments:
     """Generate experiment jobs from a goal and dataset metadata."""
 
-    def plan(self, goal_description: str, datasets_meta: Iterable[dict]) -> list[PlannedJob]:
+    def plan(
+        self, goal_description: str, datasets_meta: Iterable[dict],
+    ) -> list[PlannedJob]:
+        """Create planned jobs for each dataset based on the goal."""
         jobs: list[PlannedJob] = []
         for meta in datasets_meta:
             dataset_id = int(meta["id"])
@@ -38,7 +44,8 @@ class PlanExperiments:
                     dataset_id=dataset_id,
                     job_type="metric_summary",
                     description=(
-                        f"{goal_description} に基づき {meta.get('name')} を集計するジョブ"
+                        f"{goal_description} に基づき "
+                        f"{meta.get('name')} を集計するジョブ"
                     ),
                     query_spec=query_spec,
                 ),

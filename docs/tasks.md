@@ -117,3 +117,6 @@
   - uv run nox で lint/typing/pytest/pip-audit など品質チェックを実行
   - backendClient/ExperimentsPage/ExperimentDetailPage に単体テストを追加し、Vitest/Jest を通過
   - npm run --workspace apps/frontend test -- --runInBand で動作確認
+- [DONE] CI lint/format 修正
+  - ruff の TC/E501 系指摘を修正して `uv run --with nox nox -s lint` を通過
+  - フロントエンドの Prettier チェックを `npm run format --workspace frontend -- --write` で解消

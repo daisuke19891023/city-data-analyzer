@@ -13,7 +13,9 @@ export function ExperimentsPage(): JSX.Element {
     const [datasets, setDatasets] = useState<DatasetSummary[]>([]);
     const [selected, setSelected] = useState<number[]>([]);
     const [experiments, setExperiments] = useState<ExperimentSummary[]>([]);
-    const [message, setMessage] = useState('データセットを選択して実験を作成してください');
+    const [message, setMessage] = useState(
+        'データセットを選択して実験を作成してください'
+    );
 
     useEffect(() => {
         void (async () => {
@@ -63,9 +65,17 @@ export function ExperimentsPage(): JSX.Element {
                                         checked={selected.includes(dataset.id)}
                                         onChange={(event) => {
                                             if (event.target.checked) {
-                                                setSelected([...selected, dataset.id]);
+                                                setSelected([
+                                                    ...selected,
+                                                    dataset.id
+                                                ]);
                                             } else {
-                                                setSelected(selected.filter((id) => id !== dataset.id));
+                                                setSelected(
+                                                    selected.filter(
+                                                        (id) =>
+                                                            id !== dataset.id
+                                                    )
+                                                );
                                             }
                                         }}
                                     />
@@ -85,14 +95,23 @@ export function ExperimentsPage(): JSX.Element {
                     {experiments.map((experiment) => (
                         <div key={experiment.id} className="experiment-item">
                             <div>
-                                <div className="experiment-title">{experiment.goal_description}</div>
-                                <div className="experiment-meta">対象: {experiment.dataset_ids.join(', ')}</div>
+                                <div className="experiment-title">
+                                    {experiment.goal_description}
+                                </div>
+                                <div className="experiment-meta">
+                                    対象: {experiment.dataset_ids.join(', ')}
+                                </div>
                             </div>
                             <div className="experiment-actions">
-                                <span className={`badge badge--${experiment.status}`}>
+                                <span
+                                    className={`badge badge--${experiment.status}`}
+                                >
                                     {experiment.status}
                                 </span>
-                                <Link to={`/experiments/${experiment.id}`} className="link">
+                                <Link
+                                    to={`/experiments/${experiment.id}`}
+                                    className="link"
+                                >
                                     詳細を見る
                                 </Link>
                             </div>

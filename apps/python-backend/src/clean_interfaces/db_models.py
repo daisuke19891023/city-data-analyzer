@@ -222,8 +222,12 @@ class InsightCandidate(Base):
         DateTime, default=datetime.utcnow, nullable=False,
     )
 
-    experiment: Mapped[Experiment] = relationship("Experiment", back_populates="insights")
-    job: Mapped[ExperimentJob | None] = relationship("ExperimentJob", back_populates="insights")
+    experiment: Mapped[Experiment] = relationship(
+        "Experiment", back_populates="insights",
+    )
+    job: Mapped[ExperimentJob | None] = relationship(
+        "ExperimentJob", back_populates="insights",
+    )
     feedback: Mapped[list[InsightFeedback]] = relationship(
         "InsightFeedback", back_populates="candidate", cascade="all, delete-orphan",
     )

@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, conlist
 
-from clean_interfaces.models.dspy import QuerySpecModel
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from clean_interfaces.models.dspy import QuerySpecModel
+else:  # pragma: no cover - runtime types for pydantic validation
+    from clean_interfaces.models.dspy import QuerySpecModel  # noqa: TC001
+    from datetime import datetime  # noqa: TC003
 
 
 class ExperimentCreateRequest(BaseModel):

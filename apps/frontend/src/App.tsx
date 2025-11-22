@@ -18,7 +18,10 @@ function App(): JSX.Element {
                 <Routes>
                     <Route path="/" element={<InteractivePage />} />
                     <Route path="/experiments" element={<ExperimentsPage />} />
-                    <Route path="/experiments/:id" element={<ExperimentDetailPage />} />
+                    <Route
+                        path="/experiments/:id"
+                        element={<ExperimentDetailPage />}
+                    />
                 </Routes>
             </div>
         </BrowserRouter>

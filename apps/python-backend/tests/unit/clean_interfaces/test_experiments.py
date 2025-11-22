@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 from clean_interfaces.database import configure_engine, get_session
 from clean_interfaces.db_models import Experiment, ExperimentJob, InsightCandidate
@@ -9,7 +13,8 @@ from clean_interfaces.services.plan_experiments import PlanExperiments
 from clean_interfaces.worker import ExperimentWorker
 
 
-def setup_in_memory_session():
+def setup_in_memory_session() -> Session:
+    """Create an in-memory session for experiment tests."""
     os.environ["DATABASE_URL"] = "sqlite+pysqlite:///:memory:?cache=shared"
     configure_engine(os.environ["DATABASE_URL"])
     session = get_session()
@@ -17,7 +22,8 @@ def setup_in_memory_session():
     return session
 
 
-def seed_dataset(session):
+def seed_dataset(session: Session) -> Experiment:
+    """Seed minimal dataset data for experiment execution."""
     repo = DatasetRepository(session)
     dataset = repo.ensure_dataset(
         category_slug="population",
@@ -38,7 +44,8 @@ def seed_dataset(session):
     return dataset
 
 
-def test_plan_experiments_returns_jobs():
+def test_plan_experiments_returns_jobs() -> None:
+    """PlanExperiments returns at least one job per dataset."""
     session = setup_in_memory_session()
     dataset = seed_dataset(session)
     repo = DatasetRepository(session)
@@ -50,7 +57,8 @@ def test_plan_experiments_returns_jobs():
     assert jobs[0].query_spec.metrics
 
 
-def test_worker_generates_insight_candidate():
+def test_worker_generates_insight_candidate() -> None:
+    """Worker processes the pending job and stores an insight candidate."""
     session = setup_in_memory_session()
     dataset = seed_dataset(session)
     experiment = Experiment(

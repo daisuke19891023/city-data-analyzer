@@ -216,10 +216,7 @@ class DatasetRepository:
     def list_datasets(self) -> list[dict]:
         """List datasets with their column metadata."""
         datasets = self.session.execute(select(Dataset)).scalars().all()
-        result: list[dict] = []
-        for dataset in datasets:
-            result.append(self.get_dataset_metadata(dataset.id))
-        return result
+        return [self.get_dataset_metadata(dataset.id) for dataset in datasets]
 
     def get_records(self, dataset_id: int) -> list[dict]:
         """Fetch all stored records for a dataset as dictionaries."""

@@ -19,7 +19,10 @@ afterEach(() => {
 
 describe('backendClient helpers', () => {
     it('falls back to sample datasets when fetch fails', async () => {
-        vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('network'))));
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(() => Promise.reject(new Error('network')))
+        );
 
         const datasets = await fetchDatasets();
 
@@ -30,7 +33,9 @@ describe('backendClient helpers', () => {
     it('returns experiment id when creation succeeds', async () => {
         vi.stubGlobal(
             'fetch',
-            vi.fn(() => Promise.resolve(stubJsonResponse({ experiment_id: 17 })))
+            vi.fn(() =>
+                Promise.resolve(stubJsonResponse({ experiment_id: 17 }))
+            )
         );
 
         const id = await createExperiment('goal', [1, 2]);
@@ -44,7 +49,11 @@ describe('backendClient helpers', () => {
             vi
                 .fn()
                 .mockResolvedValueOnce(
-                    stubJsonResponse({ id: 99, goal_description: 'test', status: 'pending' })
+                    stubJsonResponse({
+                        id: 99,
+                        goal_description: 'test',
+                        status: 'pending'
+                    })
                 )
                 .mockResolvedValueOnce(stubJsonResponse({ insights: [] }))
         );

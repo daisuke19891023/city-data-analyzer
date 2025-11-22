@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 
@@ -14,22 +15,28 @@ from clean_interfaces.services.query_runner import QueryRunner
 
 POLL_INTERVAL_SECONDS = 3
 
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
+
 
 class ExperimentWorker:
     """Process pending experiment jobs sequentially."""
 
     def __init__(self) -> None:
+        """Initialize the worker and ensure the database is ready."""
         get_engine()
         with session_scope() as session:
             init_database(session)
 
     def run_forever(self) -> None:
+        """Continuously process jobs with a polling interval."""
         while True:
             processed = self.run_once()
             if not processed:
                 time.sleep(POLL_INTERVAL_SECONDS)
 
     def run_once(self) -> bool:
+        """Process a single pending job if available."""
         with session_scope() as session:
             job = session.scalars(
                 select(ExperimentJob).where(ExperimentJob.status == "pending").limit(1),
@@ -62,7 +69,7 @@ class ExperimentWorker:
                 job.updated_at = finished
                 session.commit()
                 self._update_experiment_status(session, job.experiment_id)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 job.status = "failed"
                 job.error_message = str(exc)
                 job.updated_at = datetime.now(tz=UTC)
@@ -83,7 +90,7 @@ class ExperimentWorker:
             f"返却件数: {returned}"
         )
 
-    def _update_experiment_status(self, session, experiment_id: int) -> None:
+    def _update_experiment_status(self, session: Session, experiment_id: int) -> None:
         experiment = session.get(Experiment, experiment_id)
         if experiment is None:
             return
@@ -95,6 +102,7 @@ class ExperimentWorker:
 
 
 def main() -> None:
+    """Run the worker in continuous mode."""
     worker = ExperimentWorker()
     worker.run_forever()
 
