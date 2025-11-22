@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from fastapi.testclient import TestClient
 
@@ -8,12 +8,16 @@ from clean_interfaces.database import configure_engine, session_scope
 from clean_interfaces.interfaces.restapi import RestAPIInterface
 from clean_interfaces.services.datasets import DatasetRepository, init_database
 
+if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
+    from pathlib import Path
+
 
 def test_interactive_endpoint_returns_stats(tmp_path: Path) -> None:
+    """Ensure interactive endpoint returns stats and insights."""
     configure_engine("sqlite+pysqlite:///:memory:")
     csv_path = tmp_path / "population.csv"
     csv_path.write_text(
-        "year,ward,population\n2023,A,100\n2023,B,120\n", encoding="utf-8"
+        "year,ward,population\n2023,A,100\n2023,B,120\n", encoding="utf-8",
     )
 
     with session_scope() as session:
@@ -35,7 +39,7 @@ def test_interactive_endpoint_returns_stats(tmp_path: Path) -> None:
         "/dspy/interactive",
         json={
             "dataset_id": dataset.id,
-            "question": "2023年の区別人口の平均は？",
+            "question": "2023年の区別人口の平均は?",
             "provider": "test",
             "model": "test",
         },

@@ -26,7 +26,7 @@ class OpenDataCategory(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     slug: Mapped[str] = mapped_column(
-        String(100), unique=True, nullable=False, index=True
+        String(100), unique=True, nullable=False, index=True,
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
 
@@ -40,32 +40,32 @@ class Dataset(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     category_id: Mapped[int] = mapped_column(
-        ForeignKey("open_data_categories.id"), nullable=False
+        ForeignKey("open_data_categories.id"), nullable=False,
     )
     slug: Mapped[str] = mapped_column(
-        String(100), unique=True, nullable=False, index=True
+        String(100), unique=True, nullable=False, index=True,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
+        DateTime, default=datetime.utcnow, nullable=False,
     )
 
     category: Mapped[OpenDataCategory] = relationship(
-        "OpenDataCategory", back_populates="datasets"
+        "OpenDataCategory", back_populates="datasets",
     )
     columns: Mapped[list[DatasetColumn]] = relationship(
-        "DatasetColumn", back_populates="dataset", cascade="all, delete-orphan"
+        "DatasetColumn", back_populates="dataset", cascade="all, delete-orphan",
     )
     records: Mapped[list[DatasetRecord]] = relationship(
-        "DatasetRecord", back_populates="dataset", cascade="all, delete-orphan"
+        "DatasetRecord", back_populates="dataset", cascade="all, delete-orphan",
     )
     analyses: Mapped[list[AnalysisQuery]] = relationship(
-        "AnalysisQuery", back_populates="dataset", cascade="all, delete-orphan"
+        "AnalysisQuery", back_populates="dataset", cascade="all, delete-orphan",
     )
     files: Mapped[list[DatasetFile]] = relationship(
-        "DatasetFile", back_populates="dataset", cascade="all, delete-orphan"
+        "DatasetFile", back_populates="dataset", cascade="all, delete-orphan",
     )
 
 
@@ -97,13 +97,13 @@ class DatasetRecord(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     dataset_id: Mapped[int] = mapped_column(
-        ForeignKey("datasets.id"), nullable=False, index=True
+        ForeignKey("datasets.id"), nullable=False, index=True,
     )
     row_json: Mapped[dict] = mapped_column(JSON, nullable=False)
     index_cols: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     row_hash: Mapped[str] = mapped_column(String(128), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
+        DateTime, default=datetime.utcnow, nullable=False,
     )
 
     dataset: Mapped[Dataset] = relationship("Dataset", back_populates="records")
@@ -116,7 +116,7 @@ class AnalysisQuery(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     dataset_id: Mapped[int] = mapped_column(
-        ForeignKey("datasets.id"), nullable=False, index=True
+        ForeignKey("datasets.id"), nullable=False, index=True,
     )
     question: Mapped[str] = mapped_column(Text, nullable=False)
     query_spec: Mapped[dict] = mapped_column(JSON, nullable=False)
@@ -124,7 +124,7 @@ class AnalysisQuery(Base):
     provider: Mapped[str | None] = mapped_column(String(100), nullable=True)
     model: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
+        DateTime, default=datetime.utcnow, nullable=False,
     )
 
     dataset: Mapped[Dataset] = relationship("Dataset", back_populates="analyses")
@@ -137,12 +137,12 @@ class DatasetFile(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     dataset_id: Mapped[int] = mapped_column(
-        ForeignKey("datasets.id"), nullable=False, index=True
+        ForeignKey("datasets.id"), nullable=False, index=True,
     )
     path: Mapped[str] = mapped_column(String(500), nullable=False)
     file_type: Mapped[str] = mapped_column(String(50), nullable=False, default="csv")
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
+        DateTime, default=datetime.utcnow, nullable=False,
     )
 
     dataset: Mapped[Dataset] = relationship("Dataset", back_populates="files")

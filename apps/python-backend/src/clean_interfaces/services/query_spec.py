@@ -9,6 +9,8 @@ from typing import Any
 
 @dataclass
 class QuerySpec:
+    """In-memory representation of a generated query specification."""
+
     filters: list[dict]
     group_by: list[str]
     metrics: list[dict]
@@ -16,6 +18,7 @@ class QuerySpec:
     limit: int | None = None
 
     def model_dump(self) -> dict:
+        """Return a plain dictionary representation."""
         return {
             "filters": self.filters,
             "group_by": self.group_by,
@@ -29,6 +32,7 @@ class RuleBasedQueryGenerator:
     """Generate a QuerySpec using lightweight heuristics."""
 
     def __init__(self) -> None:
+        """Prepare keyword mappings for metric detection."""
         self.metric_keywords = {
             "avg": ["平均", "average", "mean"],
             "sum": ["合計", "総", "sum", "total"],
@@ -38,6 +42,7 @@ class RuleBasedQueryGenerator:
         }
 
     def generate(self, question: str, dataset_meta: dict[str, Any]) -> QuerySpec:
+        """Generate a QuerySpec from a question and dataset metadata."""
         columns = dataset_meta.get("columns", [])
         normalized_question = question.lower()
         group_by = self._detect_group_by(normalized_question, columns)
@@ -58,7 +63,7 @@ class RuleBasedQueryGenerator:
         for column in columns:
             name = column["name"].lower()
             if re.search(r"year|年度|年", question) and re.search(
-                r"year|年度|年", name
+                r"year|年度|年", name,
             ):
                 candidates.append(column["name"])
             if re.search(r"ward|区", question) and (
@@ -90,12 +95,12 @@ class RuleBasedQueryGenerator:
             ]
             if year_columns:
                 filters.append(
-                    {"column": year_columns[0]["name"], "op": "eq", "value": year}
+                    {"column": year_columns[0]["name"], "op": "eq", "value": year},
                 )
         return filters
 
     def _detect_order(
-        self, question: str, group_by: list[str], metrics: list[dict]
+        self, question: str, group_by: list[str], metrics: list[dict],
     ) -> list[dict]:
         if metrics:
             metric = metrics[0]

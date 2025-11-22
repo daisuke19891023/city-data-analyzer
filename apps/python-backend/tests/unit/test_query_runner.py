@@ -1,17 +1,21 @@
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from clean_interfaces.database import configure_engine, session_scope
 from clean_interfaces.services.datasets import DatasetRepository, init_database
 from clean_interfaces.services.query_runner import QueryRunner
 
+if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
+    from pathlib import Path
+
 
 def test_group_and_metric_execution(tmp_path: Path) -> None:
+    """Ensure query runner executes filters, grouping, and metrics."""
     configure_engine("sqlite+pysqlite:///:memory:")
     csv_path = tmp_path / "population.csv"
     csv_path.write_text(
-        "year,ward,population\n2023,A,100\n2023,B,150\n2022,A,120\n", encoding="utf-8"
+        "year,ward,population\n2023,A,100\n2023,B,150\n2022,A,120\n", encoding="utf-8",
     )
 
     with session_scope() as session:

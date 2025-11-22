@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
-from sqlalchemy.orm import Session
 
 from clean_interfaces.services.datasets import DatasetRepository
 
+if TYPE_CHECKING:  # pragma: no cover - type checking imports
+    from sqlalchemy.orm import Session
 
 class QueryValidationError(ValueError):
     """Raised when a query spec references invalid columns."""
@@ -17,10 +18,12 @@ class QueryValidationError(ValueError):
 class QueryRunner:
     """Run QuerySpecs on stored dataset records."""
 
-    def __init__(self, session: Session):
+    def __init__(self, session: Session) -> None:
+        """Initialize the runner with a dataset repository."""
         self.repo = DatasetRepository(session)
 
     def run(self, dataset_id: int, query_spec: dict[str, Any]) -> dict[str, Any]:
+        """Execute the provided query spec and return data, summary, and schema."""
         dataset_meta = self.repo.get_dataset_metadata(dataset_id)
         valid_columns = {col["name"] for col in dataset_meta["columns"]}
         self._validate(query_spec, valid_columns)
@@ -70,7 +73,7 @@ class QueryRunner:
                 raise QueryValidationError(msg)
 
     def _ensure_columns(
-        self, frame: pd.DataFrame, valid_columns: set[str]
+        self, frame: pd.DataFrame, valid_columns: set[str],
     ) -> pd.DataFrame:
         missing_columns = [col for col in frame.columns if col not in valid_columns]
         if missing_columns:
@@ -84,7 +87,8 @@ class QueryRunner:
             op = filter_item.get("op", "eq")
             value = filter_item.get("value")
             if column not in filtered.columns:
-                raise QueryValidationError(f"Unknown filter column: {column}")
+                msg = f"Unknown filter column: {column}"
+                raise QueryValidationError(msg)
             if op == "eq":
                 filtered = filtered[filtered[column] == value]
             elif op == "gte":
@@ -101,7 +105,7 @@ class QueryRunner:
         return filtered
 
     def _apply_group_and_metrics(
-        self, frame: pd.DataFrame, query_spec: dict[str, Any]
+        self, frame: pd.DataFrame, query_spec: dict[str, Any],
     ) -> pd.DataFrame:
         group_by = query_spec.get("group_by") or []
         metrics = query_spec.get("metrics") or []
@@ -135,13 +139,13 @@ class QueryRunner:
             aggregated = grouped.size().to_frame("count")
 
         if hasattr(aggregated, "columns") and isinstance(
-            aggregated.columns, pd.MultiIndex
+            aggregated.columns, pd.MultiIndex,
         ):
             aggregated.columns = [
                 "_".join(
                     filter(
-                        None, [col if isinstance(col, str) else col[0] for col in cols]
-                    )
+                        None, [col if isinstance(col, str) else col[0] for col in cols],
+                    ),
                 )
                 for cols in aggregated.columns.to_flat_index()
             ]
@@ -149,7 +153,7 @@ class QueryRunner:
         aggregated = aggregated.reset_index()
 
         if count_requested:
-            aggregated["count"] = grouped.size().values
+            aggregated["count"] = grouped.size().to_numpy()
         return aggregated
 
     def _apply_metrics(self, frame: pd.DataFrame, metrics: list[dict]) -> pd.DataFrame:
@@ -165,7 +169,7 @@ class QueryRunner:
             agg = agg_map.get(metric.get("agg", "count"), metric.get("agg", "count"))
             column = metric.get("column")
             if agg == "count":
-                result["count"] = int(len(frame))
+                result["count"] = len(frame)
             elif column and agg == "mean":
                 result[f"avg_{column}"] = frame[column].mean()
             elif column and agg == "sum":
@@ -177,7 +181,7 @@ class QueryRunner:
         return pd.DataFrame([result])
 
     def _apply_order_and_limit(
-        self, frame: pd.DataFrame, query_spec: dict[str, Any]
+        self, frame: pd.DataFrame, query_spec: dict[str, Any],
     ) -> pd.DataFrame:
         order_by = query_spec.get("order_by") or []
         if order_by:

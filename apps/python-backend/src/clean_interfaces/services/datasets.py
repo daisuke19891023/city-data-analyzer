@@ -7,12 +7,10 @@ import hashlib
 import json
 import re
 from collections import Counter
-from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
 
 from clean_interfaces.db_models import (
     AnalysisQuery,
@@ -23,6 +21,11 @@ from clean_interfaces.db_models import (
     OpenDataCategory,
 )
 from clean_interfaces.database import init_db
+
+if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
+    from collections.abc import Iterable
+    from pathlib import Path
+    from sqlalchemy.orm import Session
 
 DEFAULT_OPEN_DATA_CATEGORIES: list[tuple[str, str]] = [
     ("population", "人口・世帯"),
@@ -43,12 +46,12 @@ DEFAULT_OPEN_DATA_CATEGORIES: list[tuple[str, str]] = [
 class DatasetRepository:
     """Repository to manage datasets and records."""
 
-    def __init__(self, session: Session):
+    def __init__(self, session: Session) -> None:
+        """Store the SQLAlchemy session used by repository methods."""
         self.session = session
 
     def seed_categories(self) -> None:
         """Ensure the default 12 categories are present."""
-
         existing = {
             slug
             for (slug,) in self.session.execute(select(OpenDataCategory.slug)).all()
@@ -60,9 +63,8 @@ class DatasetRepository:
 
     def ensure_category(self, slug: str, name: str) -> OpenDataCategory:
         """Fetch or create a category."""
-
         category = self.session.scalar(
-            select(OpenDataCategory).where(OpenDataCategory.slug == slug)
+            select(OpenDataCategory).where(OpenDataCategory.slug == slug),
         )
         if category is None:
             category = OpenDataCategory(slug=slug, name=name)
@@ -79,13 +81,12 @@ class DatasetRepository:
         year: int | None,
     ) -> Dataset:
         """Fetch or create a dataset under the given category."""
-
         category_name = dict(DEFAULT_OPEN_DATA_CATEGORIES).get(
-            category_slug, category_slug
+            category_slug, category_slug,
         )
         category = self.ensure_category(category_slug, category_name)
         dataset = self.session.scalar(
-            select(Dataset).where(Dataset.slug == dataset_slug)
+            select(Dataset).where(Dataset.slug == dataset_slug),
         )
         if dataset:
             return dataset
@@ -103,7 +104,6 @@ class DatasetRepository:
 
     def upsert_columns(self, dataset: Dataset, columns: list[dict]) -> None:
         """Insert column metadata if missing."""
-
         existing = {col.name: col for col in dataset.columns}
         for column in columns:
             if column["name"] in existing:
@@ -125,9 +125,8 @@ class DatasetRepository:
 
     def add_record(self, dataset: Dataset, row_json: dict, index_cols: dict) -> None:
         """Insert a record if it does not already exist (idempotent)."""
-
         row_hash = hashlib.sha256(
-            json.dumps(row_json, sort_keys=True, ensure_ascii=False).encode("utf-8")
+            json.dumps(row_json, sort_keys=True, ensure_ascii=False).encode("utf-8"),
         ).hexdigest()
         record = DatasetRecord(
             dataset_id=dataset.id,
@@ -142,10 +141,9 @@ class DatasetRepository:
             self.session.rollback()
 
     def add_file(
-        self, dataset: Dataset, path: str, file_type: str = "csv"
+        self, dataset: Dataset, path: str, file_type: str = "csv",
     ) -> DatasetFile:
         """Record an imported file."""
-
         file_entry = DatasetFile(dataset_id=dataset.id, path=path, file_type=file_type)
         self.session.add(file_entry)
         self.session.commit()
@@ -162,9 +160,8 @@ class DatasetRepository:
         index_columns: list[str] | None = None,
     ) -> Dataset:
         """Load a CSV file and store dataset metadata and records."""
-
         dataset = self.ensure_dataset(
-            category_slug, dataset_slug, dataset_name, description, year
+            category_slug, dataset_slug, dataset_name, description, year,
         )
         raw_rows = self._read_csv_rows(csv_path)
         inferred_columns = infer_columns(raw_rows, index_columns)
@@ -190,6 +187,7 @@ class DatasetRepository:
             return rows
 
     def get_dataset_metadata(self, dataset_id: int) -> dict:
+        """Return metadata (slug/name/description/year/columns) for a dataset."""
         dataset = self.session.get(Dataset, dataset_id)
         if not dataset:
             msg = f"Dataset {dataset_id} not found"
@@ -203,7 +201,7 @@ class DatasetRepository:
                 "is_index": col.is_index,
             }
             for col in self.session.execute(
-                select(DatasetColumn).where(DatasetColumn.dataset_id == dataset_id)
+                select(DatasetColumn).where(DatasetColumn.dataset_id == dataset_id),
             ).scalars()
         ]
         return {
@@ -216,12 +214,13 @@ class DatasetRepository:
         }
 
     def get_records(self, dataset_id: int) -> list[dict]:
+        """Fetch all stored records for a dataset as dictionaries."""
         return [
             row_json
             for (row_json,) in self.session.execute(
                 select(DatasetRecord.row_json).where(
-                    DatasetRecord.dataset_id == dataset_id
-                )
+                    DatasetRecord.dataset_id == dataset_id,
+                ),
             )
         ]
 
@@ -234,6 +233,7 @@ class DatasetRepository:
         provider: str | None,
         model: str | None,
     ) -> AnalysisQuery:
+        """Persist an analysis query and return the stored record."""
         analysis = AnalysisQuery(
             dataset_id=dataset_id,
             question=question,
@@ -248,6 +248,7 @@ class DatasetRepository:
 
 
 def parse_value(value: str | None) -> object:
+    """Convert CSV cell strings to typed Python values."""
     if value is None:
         return None
     stripped = value.strip()
@@ -261,8 +262,9 @@ def parse_value(value: str | None) -> object:
 
 
 def infer_columns(
-    rows: Iterable[dict[str, object]], index_columns: list[str] | None = None
+    rows: Iterable[dict[str, object]], index_columns: list[str] | None = None,
 ) -> list[dict]:
+    """Infer column metadata (name/type/is_index) from the first batch of rows."""
     rows_list = list(rows)
     if not rows_list:
         return []
@@ -288,7 +290,7 @@ def infer_columns(
         is_index = index_columns is not None and key in index_columns
         if index_columns is None:
             is_index = bool(
-                re.search(r"year|年度|month|code|コード", key, re.IGNORECASE)
+                re.search(r"year|年度|month|code|コード", key, re.IGNORECASE),
             )
         inferred.append(
             {
@@ -296,12 +298,13 @@ def infer_columns(
                 "data_type": data_type,
                 "description": None,
                 "is_index": is_index,
-            }
+            },
         )
     return inferred
 
 
 def extract_index_cols(row: dict[str, object], inferred_columns: list[dict]) -> dict:
+    """Extract index column values from a row using inferred metadata."""
     index_values: dict[str, object] = {}
     for column in inferred_columns:
         if column.get("is_index"):
@@ -313,7 +316,6 @@ def extract_index_cols(row: dict[str, object], inferred_columns: list[dict]) -> 
 
 def init_database(session: Session) -> None:
     """Create tables and seed categories."""
-
     bind = session.get_bind()
     init_db(bind)
     repo = DatasetRepository(session)
