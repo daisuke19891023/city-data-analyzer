@@ -153,6 +153,39 @@ class InterfaceSettings(BaseSettings):
         return InterfaceType(self.interface_type)
 
 
+class AuthSettings(BaseSettings):
+    """Authentication and authorization settings."""
+
+    instance: ClassVar[Any] = None
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
+
+    api_token: str | None = Field(
+        default=None,
+        description="Static API token for bearer authentication",
+    )
+
+    oidc_issuer: str | None = Field(
+        default=None,
+        description="OIDC issuer URL for validating JWTs",
+    )
+
+    oidc_audience: str | None = Field(
+        default=None,
+        description="OIDC audience to verify in incoming tokens",
+    )
+
+    oidc_jwks_url: str | None = Field(
+        default=None,
+        description="Optional override for JWKS endpoint",
+    )
+
+
 def get_settings() -> LoggingSettings:
     """Get the global settings instance.
 
@@ -191,3 +224,17 @@ def reset_interface_settings() -> None:
     This is mainly useful for testing.
     """
     InterfaceSettings.instance = None
+
+
+def get_auth_settings() -> AuthSettings:
+    """Get the global authentication settings instance."""
+
+    if AuthSettings.instance is None:
+        AuthSettings.instance = AuthSettings()
+    return AuthSettings.instance
+
+
+def reset_auth_settings() -> None:
+    """Reset the global authentication settings instance."""
+
+    AuthSettings.instance = None

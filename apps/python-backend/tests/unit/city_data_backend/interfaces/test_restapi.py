@@ -1,5 +1,6 @@
 """Tests for RestAPI interface implementation."""
 
+import os
 from unittest.mock import MagicMock, patch
 
 from fastapi import FastAPI
@@ -7,6 +8,16 @@ from fastapi.testclient import TestClient
 
 from city_data_backend.interfaces.base import BaseInterface
 from city_data_backend.interfaces.restapi import RestAPIInterface
+
+
+TEST_TOKEN = "test-token"  # noqa: S105
+
+
+def create_authenticated_client() -> TestClient:
+    """Return a TestClient with default auth header configured."""
+    os.environ.setdefault("API_TOKEN", TEST_TOKEN)
+    api = RestAPIInterface()
+    return TestClient(api.app, headers={"Authorization": f"Bearer {TEST_TOKEN}"})
 
 
 class TestRestAPIInterface:
@@ -99,8 +110,7 @@ class TestRestAPISwaggerUIEndpoints:
 
     def test_swagger_ui_returns_html(self) -> None:
         """Test that Swagger UI endpoint returns HTML response."""
-        api = RestAPIInterface()
-        client = TestClient(api.app)
+        client = create_authenticated_client()
 
         response = client.get("/api/v1/swagger-ui")
         assert response.status_code == 200
@@ -108,8 +118,7 @@ class TestRestAPISwaggerUIEndpoints:
 
     def test_swagger_ui_schema_returns_json(self) -> None:
         """Test that Swagger UI schema endpoint returns JSON response."""
-        api = RestAPIInterface()
-        client = TestClient(api.app)
+        client = create_authenticated_client()
 
         response = client.get("/api/v1/swagger-ui/schema")
         assert response.status_code == 200
@@ -121,8 +130,7 @@ class TestRestAPISwaggerUIEndpoints:
 
     def test_swagger_ui_analysis_returns_json(self) -> None:
         """Test that Swagger UI analysis endpoint returns JSON response."""
-        api = RestAPIInterface()
-        client = TestClient(api.app)
+        client = create_authenticated_client()
 
         response = client.get("/api/v1/swagger-ui/analysis")
         assert response.status_code == 200
@@ -135,8 +143,7 @@ class TestRestAPISwaggerUIEndpoints:
 
     def test_swagger_ui_schema_includes_dynamic_content_metadata(self) -> None:
         """Test that schema includes dynamic content generation metadata."""
-        api = RestAPIInterface()
-        client = TestClient(api.app)
+        client = create_authenticated_client()
 
         response = client.get("/api/v1/swagger-ui/schema")
         schema = response.json()
@@ -148,8 +155,7 @@ class TestRestAPISwaggerUIEndpoints:
 
     def test_swagger_ui_analysis_includes_interface_information(self) -> None:
         """Test that analysis includes interface type information."""
-        api = RestAPIInterface()
-        client = TestClient(api.app)
+        client = create_authenticated_client()
 
         response = client.get("/api/v1/swagger-ui/analysis")
         analysis = response.json()

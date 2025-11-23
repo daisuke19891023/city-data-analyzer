@@ -11,9 +11,16 @@ from city_data_backend.services.datasets import DatasetRepository, init_database
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from pathlib import Path
 
+    import pytest
 
-def test_interactive_endpoint_returns_stats(tmp_path: Path) -> None:
+
+def test_interactive_endpoint_returns_stats(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Ensure interactive endpoint returns stats and insights."""
+    token = "test-token"  # noqa: S105
+    monkeypatch.setenv("API_TOKEN", token)
     configure_engine("sqlite+pysqlite:///:memory:")
     csv_path = tmp_path / "population.csv"
     csv_path.write_text(
@@ -34,7 +41,7 @@ def test_interactive_endpoint_returns_stats(tmp_path: Path) -> None:
         )
 
     interface = RestAPIInterface()
-    client = TestClient(interface.app)
+    client = TestClient(interface.app, headers={"Authorization": f"Bearer {token}"})
 
     response = client.post(
         "/dspy/interactive",

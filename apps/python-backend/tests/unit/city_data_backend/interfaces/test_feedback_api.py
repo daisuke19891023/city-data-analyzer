@@ -21,12 +21,23 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
 
+TEST_TOKEN = "test-token"  # noqa: S105
+
+
 def setup_in_memory() -> None:
     """Configure a shared in-memory SQLite database for tests."""
     os.environ["DATABASE_URL"] = "sqlite+pysqlite:///:memory:?cache=shared"
+    os.environ.setdefault("API_TOKEN", TEST_TOKEN)
     configure_engine(os.environ["DATABASE_URL"])
     session = get_session()
     init_database(session)
+
+
+def create_client() -> TestClient:
+    """Create an authenticated test client."""
+    os.environ.setdefault("API_TOKEN", TEST_TOKEN)
+    api = RestAPIInterface()
+    return TestClient(api.app, headers={"Authorization": f"Bearer {TEST_TOKEN}"})
 
 
 def seed_analysis(session: Session) -> AnalysisQuery:
@@ -124,8 +135,7 @@ def seed_candidate(session: Session) -> InsightCandidate:
 def test_feedback_requires_target() -> None:
     """Return 400 when neither insight_id nor analysis_id is provided."""
     setup_in_memory()
-    api = RestAPIInterface()
-    client = TestClient(api.app)
+    client = create_client()
 
     response = client.post(
         "/feedback",
@@ -141,8 +151,7 @@ def test_feedback_for_analysis_is_stored() -> None:
     analysis = seed_analysis(session)
     session.close()
 
-    api = RestAPIInterface()
-    client = TestClient(api.app)
+    client = create_client()
     response = client.post(
         "/feedback",
         json={
@@ -171,8 +180,7 @@ def test_feedback_for_candidate_marks_adopted() -> None:
     candidate = seed_candidate(session)
     session.close()
 
-    api = RestAPIInterface()
-    client = TestClient(api.app)
+    client = create_client()
     response = client.post(
         "/feedback",
         json={
