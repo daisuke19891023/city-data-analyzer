@@ -350,3 +350,31 @@ class CompiledProgramArtifact(Base):
         default=lambda: datetime.now(UTC),
         nullable=False,
     )
+
+
+class OptimizationJob(Base):
+    """Queue for compiling interactive programs from curated trainsets."""
+
+    __tablename__ = "optimization_jobs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    trainset_path: Mapped[str] = mapped_column(String(500), nullable=False)
+    version: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), default="pending", nullable=False)
+    metric: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    artifact_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("compiled_program_artifacts.id"), nullable=True,
+    )
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
