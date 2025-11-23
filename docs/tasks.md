@@ -1,6 +1,7 @@
 # city-data-analyzer タスク & ロードマップ
 
 ## 最新対応
+- [DONE] ruff lint エラーを解消（requests の型参照を削除し、テストで TestClient を直接使用）する修正を実施（2025-11-23）。
 - [DONE] pyright エラー解消と最適化エンドポイント E2E テストの型注釈調整（2025-11-23）。
 - [DONE] [Issue #19] VITE_DATA_MODE を import.meta.env から直接読んでモード判定するよう修正し、データモードのユニットテストを追加（2025-11-23）。
 - [DONE] frontend フォーマットエラーの修正（`src/lib/dataSource.ts` を Prettier 準拠に整形）（2025-11-23）。
