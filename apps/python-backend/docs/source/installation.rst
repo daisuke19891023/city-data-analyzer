@@ -1,7 +1,7 @@
 Installation
 ============
 
-This guide covers the installation of Clean Interfaces.
+This guide covers the installation of City Data Backend.
 
 Requirements
 ------------
@@ -34,8 +34,8 @@ From Source
 
    .. code-block:: bash
 
-      git clone https://github.com/your-username/clean-interfaces.git
-      cd clean-interfaces
+      git clone https://github.com/your-username/city-data-backend.git
+      cd city-data-backend
 
 2. Create virtual environment and install dependencies:
 
@@ -63,10 +63,10 @@ Once published to PyPI, you can install using:
 
 .. code-block:: bash
 
-   uv pip install clean-interfaces
+   uv pip install city-data-backend
 
    # Or with extras
-   uv pip install "clean-interfaces[docs]"
+   uv pip install "city-data-backend[docs]"
 
 Configuration
 -------------
@@ -94,10 +94,10 @@ Verify the installation by running:
 .. code-block:: bash
 
    # Show help
-   uv run python -m clean_interfaces.main --help
+   uv run python -m city_data_backend.main --help
 
    # Run the application
-   uv run python -m clean_interfaces.main
+   uv run python -m city_data_backend.main
 
 Next Steps
 ----------

@@ -3,9 +3,9 @@
 import pytest
 from fastmcp import Client
 
-from clean_interfaces.interfaces.factory import InterfaceFactory
-from clean_interfaces.interfaces.mcp import MCPInterface
-from clean_interfaces.types import InterfaceType
+from city_data_backend.interfaces.factory import InterfaceFactory
+from city_data_backend.interfaces.mcp import MCPInterface
+from city_data_backend.types import InterfaceType
 
 
 class TestMCPInterfaceE2E:
@@ -25,5 +25,5 @@ class TestMCPInterfaceE2E:
         """Test that the welcome tool returns the correct message."""
         async with Client(mcp_interface.mcp) as client:
             result = await client.call_tool("welcome")
-            assert "Welcome to Clean Interfaces!" in str(result)
+            assert "Welcome to City Data Backend!" in str(result)
             assert "Type --help for more information" in str(result)

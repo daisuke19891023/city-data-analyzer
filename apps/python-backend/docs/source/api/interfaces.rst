@@ -1,4 +1,4 @@
-clean_interfaces.interfaces
+city_data_backend.interfaces
 ===========================
 
 This module contains all interface implementations.
@@ -6,7 +6,7 @@ This module contains all interface implementations.
 Base Interface
 --------------
 
-.. automodule:: clean_interfaces.interfaces.base
+.. automodule:: city_data_backend.interfaces.base
    :members:
    :undoc-members:
    :show-inheritance:
@@ -14,7 +14,7 @@ Base Interface
 CLI Interface
 -------------
 
-.. automodule:: clean_interfaces.interfaces.cli
+.. automodule:: city_data_backend.interfaces.cli
    :members:
    :undoc-members:
    :show-inheritance:
@@ -22,7 +22,7 @@ CLI Interface
 REST API Interface
 ------------------
 
-.. automodule:: clean_interfaces.interfaces.restapi
+.. automodule:: city_data_backend.interfaces.restapi
    :members:
    :undoc-members:
    :show-inheritance:
@@ -30,7 +30,7 @@ REST API Interface
 Interface Factory
 -----------------
 
-.. automodule:: clean_interfaces.interfaces.factory
+.. automodule:: city_data_backend.interfaces.factory
    :members:
    :undoc-members:
    :show-inheritance:

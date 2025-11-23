@@ -1,6 +1,6 @@
 # Logging Guide
 
-Clean Interfaces provides comprehensive logging capabilities with structured logging and multiple output formats.
+City Data Backend provides comprehensive logging capabilities with structured logging and multiple output formats.
 
 ## Overview
 
@@ -30,7 +30,7 @@ export LOG_FILE=/path/to/app.log
 All components use structured logging with context:
 
 ```python
-from clean_interfaces.base import BaseComponent
+from city_data_backend.base import BaseComponent
 
 class MyComponent(BaseComponent):
     def process(self, item_id: str) -> None:
@@ -56,7 +56,7 @@ Best for production and log aggregation:
 {
     "timestamp": "2025-01-20T12:00:00.123Z",
     "level": "info",
-    "logger": "clean_interfaces.app",
+    "logger": "city_data_backend.app",
     "message": "Application started",
     "component": "Application",
     "trace_id": "abc123",
@@ -69,7 +69,7 @@ Best for production and log aggregation:
 Human-readable format for development:
 
 ```
-2025-01-20 12:00:00 [INFO] clean_interfaces.app: Application started component=Application
+2025-01-20 12:00:00 [INFO] city_data_backend.app: Application started component=Application
 ```
 
 ## Performance Logging
@@ -77,7 +77,7 @@ Human-readable format for development:
 Use the performance decorator for timing operations:
 
 ```python
-from clean_interfaces.utils.logger import log_performance
+from city_data_backend.utils.logger import log_performance
 
 @log_performance
 def slow_operation(data: list[str]) -> dict[str, int]:

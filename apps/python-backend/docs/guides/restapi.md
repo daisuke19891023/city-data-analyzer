@@ -1,6 +1,6 @@
 # REST API Interface Guide
 
-The REST API interface provides HTTP endpoints for interacting with the Clean Interfaces application.
+The REST API interface provides HTTP endpoints for interacting with the City Data Backend application.
 
 ## Overview
 
@@ -15,10 +15,10 @@ To run the application with the REST API interface:
 export INTERFACE_TYPE=restapi
 
 # Run the application
-python -m clean_interfaces.main
+python -m city_data_backend.main
 
 # Or use uvicorn directly
-uvicorn clean_interfaces.main:app --reload
+uvicorn city_data_backend.main:app --reload
 ```
 
 ## Available Endpoints
@@ -54,7 +54,7 @@ curl http://localhost:8000/api/v1/welcome
 Response:
 ```json
 {
-  "message": "Welcome to Clean Interfaces!",
+  "message": "Welcome to City Data Backend!",
   "hint": "Type --help for more information",
   "version": "0.1.0"
 }

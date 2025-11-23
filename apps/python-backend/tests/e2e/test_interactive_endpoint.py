@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 
 from fastapi.testclient import TestClient
 
-from clean_interfaces.database import configure_engine, session_scope
-from clean_interfaces.interfaces.restapi import RestAPIInterface
-from clean_interfaces.services.datasets import DatasetRepository, init_database
+from city_data_backend.database import configure_engine, session_scope
+from city_data_backend.interfaces.restapi import RestAPIInterface
+from city_data_backend.services.datasets import DatasetRepository, init_database
 
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from pathlib import Path

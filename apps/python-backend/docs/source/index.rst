@@ -1,9 +1,9 @@
-.. Clean Interfaces documentation master file
+.. City Data Backend documentation master file
 
-Clean Interfaces Documentation
+City Data Backend Documentation
 ==============================
 
-Welcome to Clean Interfaces documentation! This project provides a flexible Python application framework with multiple interface types and comprehensive logging support.
+Welcome to City Data Backend documentation! This project provides a flexible Python application framework with multiple interface types and comprehensive logging support.
 
 .. toctree::
    :maxdepth: 2
@@ -36,6 +36,6 @@ Quick Links
 Project Links
 -------------
 
-* `GitHub Repository <https://github.com/your-username/clean-interfaces>`_
-* `Issue Tracker <https://github.com/your-username/clean-interfaces/issues>`_
-* `PyPI Package <https://pypi.org/project/clean-interfaces/>`_
+* `GitHub Repository <https://github.com/your-username/city-data-backend>`_
+* `Issue Tracker <https://github.com/your-username/city-data-backend/issues>`_
+* `PyPI Package <https://pypi.org/project/city-data-backend/>`_

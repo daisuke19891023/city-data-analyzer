@@ -16,7 +16,7 @@ The MCP interface is built using [FastMCP](https://github.com/jlowin/fastmcp), p
 
 ```bash
 # Run with default settings (stdio transport)
-uv run python -m clean_interfaces.main
+uv run python -m city_data_backend.main
 ```
 
 ### Setting MCP as Default
@@ -41,7 +41,7 @@ The `welcome` tool returns a welcome message.
 An MCP client can call this tool and receive the message:
 
 ```
-"Welcome to Clean Interfaces!\nType --help for more information"
+"Welcome to City Data Backend!\nType --help for more information"
 ```
 
 ## Configuration for MCP
@@ -72,7 +72,7 @@ LOG_FILE_PATH=/var/log/mcp.log
 To add new tools to the MCP interface, modify the `MCPInterface` class:
 
 ```python
-# src/clean_interfaces/interfaces/mcp.py
+# src/city_data_backend/interfaces/mcp.py
 
 from fastmcp import FastMCP
 from .base import BaseInterface
@@ -80,7 +80,7 @@ from .base import BaseInterface
 class MCPInterface(BaseInterface):
     def __init__(self) -> None:
         super().__init__()
-        self.mcp = FastMCP(name="clean-interfaces-mcp")
+        self.mcp = FastMCP(name="city-data-backend-mcp")
         self._setup_commands()
 
     def _setup_commands(self) -> None:

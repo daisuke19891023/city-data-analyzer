@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING, Any, cast
 
 from fastapi.testclient import TestClient
 
-from clean_interfaces.database import configure_engine, session_scope
-from clean_interfaces.interfaces.restapi import RestAPIInterface
-from clean_interfaces.models.dspy import OptimizationArtifactRequest
-from clean_interfaces.services import dspy_program
-from clean_interfaces.services.datasets import init_database
+from city_data_backend.database import configure_engine, session_scope
+from city_data_backend.interfaces.restapi import RestAPIInterface
+from city_data_backend.models.dspy import OptimizationArtifactRequest
+from city_data_backend.services import dspy_program
+from city_data_backend.services.datasets import init_database
 
 if TYPE_CHECKING:
     from pathlib import Path

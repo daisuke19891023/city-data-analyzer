@@ -9,17 +9,17 @@ from typing import TypedDict
 import pytest
 from fastapi.testclient import TestClient
 
-from clean_interfaces.database import configure_engine, get_session
-from clean_interfaces.db_models import Experiment, ExperimentJob, InsightCandidate
-from clean_interfaces.interfaces.restapi import RestAPIInterface
-from clean_interfaces.models.dspy import QueryMetric, QueryOrder, QuerySpecModel
-from clean_interfaces.models.experiments import PlannedJob
-from clean_interfaces.services.datasets import DatasetRepository, init_database
-from clean_interfaces.services.dspy_program import (
+from city_data_backend.database import configure_engine, get_session
+from city_data_backend.db_models import Experiment, ExperimentJob, InsightCandidate
+from city_data_backend.interfaces.restapi import RestAPIInterface
+from city_data_backend.models.dspy import QueryMetric, QueryOrder, QuerySpecModel
+from city_data_backend.models.experiments import PlannedJob
+from city_data_backend.services.datasets import DatasetRepository, init_database
+from city_data_backend.services.dspy_program import (
     InteractiveAnalysisProgram,
     InteractiveResponse,
 )
-from clean_interfaces.services.plan_experiments import PlanExperiments
+from city_data_backend.services.plan_experiments import PlanExperiments
 
 
 class DatasetMeta(TypedDict):

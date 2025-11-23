@@ -1,6 +1,6 @@
 # Testing Guide
 
-Comprehensive testing is crucial for maintaining code quality in Clean Interfaces.
+Comprehensive testing is crucial for maintaining code quality in City Data Backend.
 
 ## Testing Philosophy
 
@@ -67,12 +67,12 @@ uv run pytest -k "test_file"  # Run tests matching pattern
 Test individual components in isolation:
 
 ```python
-# tests/unit/clean_interfaces/utils/test_file_handler.py
+# tests/unit/city_data_backend/utils/test_file_handler.py
 import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch, mock_open
 
-from clean_interfaces.utils.file_handler import FileHandler
+from city_data_backend.utils.file_handler import FileHandler
 
 
 class TestFileHandler:
@@ -113,8 +113,8 @@ Test component interactions:
 import pytest
 from pathlib import Path
 
-from clean_interfaces.app import Application
-from clean_interfaces.types import InterfaceType
+from city_data_backend.app import Application
+from city_data_backend.types import InterfaceType
 
 
 class TestApplicationIntegration:
@@ -169,7 +169,7 @@ class TestCLIWorkflow:
         
         # Run CLI command
         result = subprocess.run(
-            [sys.executable, "-m", "clean_interfaces.main", "--help"],
+            [sys.executable, "-m", "city_data_backend.main", "--help"],
             capture_output=True,
             text=True,
             check=False
@@ -191,7 +191,7 @@ import pytest
 from pathlib import Path
 from typing import Generator
 
-from clean_interfaces.app import Application
+from city_data_backend.app import Application
 
 
 @pytest.fixture
@@ -223,7 +223,7 @@ Create reusable test components:
 
 ```python
 # tests/fixtures/factories.py
-from clean_interfaces.models.api import WelcomeResponse
+from city_data_backend.models.api import WelcomeResponse
 
 
 def create_welcome_response(**kwargs: Any) -> WelcomeResponse:

@@ -1,12 +1,12 @@
-clean_interfaces.utils
+city_data_backend.utils
 ======================
 
-Utility modules for Clean Interfaces.
+Utility modules for City Data Backend.
 
 Logger Module
 -------------
 
-.. automodule:: clean_interfaces.utils.logger
+.. automodule:: city_data_backend.utils.logger
    :members:
    :undoc-members:
    :show-inheritance:
@@ -14,7 +14,7 @@ Logger Module
 Settings Module
 ---------------
 
-.. automodule:: clean_interfaces.utils.settings
+.. automodule:: city_data_backend.utils.settings
    :members:
    :undoc-members:
    :show-inheritance:
@@ -22,7 +22,7 @@ Settings Module
 File Handler Module
 -------------------
 
-.. automodule:: clean_interfaces.utils.file_handler
+.. automodule:: city_data_backend.utils.file_handler
    :members:
    :undoc-members:
    :show-inheritance:

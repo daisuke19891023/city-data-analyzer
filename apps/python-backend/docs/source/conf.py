@@ -1,4 +1,4 @@
-"""Sphinx configuration file for Clean Interfaces documentation."""
+"""Sphinx configuration file for City Data Backend documentation."""
 
 import sys
 from datetime import UTC, datetime
@@ -9,7 +9,7 @@ project_root = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(project_root / "src"))
 
 # Project information
-project = "Clean Interfaces"
+project = "City Data Backend"
 copyright = f"{datetime.now(tz=UTC).year}, Daisuke Okamoto"  # noqa: A001
 author = "Daisuke Okamoto"
 release = "0.1.0"
@@ -35,7 +35,7 @@ html_theme_options = {
     "description": "A flexible Python application framework "
     "with multiple interface types",
     "github_user": "your-username",
-    "github_repo": "clean-interfaces",
+    "github_repo": "city-data-backend",
     "fixed_sidebar": True,
 }
 

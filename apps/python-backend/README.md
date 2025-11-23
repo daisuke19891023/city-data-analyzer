@@ -1,4 +1,4 @@
-# Clean Interfaces
+# City Data Backend
 
 A flexible Python application framework with multiple interface types and comprehensive logging support.
 This backend now lives under `apps/python-backend` as part of the monorepo layout.
@@ -17,8 +17,8 @@ This backend now lives under `apps/python-backend` as part of the monorepo layou
 ## Project Structure
 
 ```
-clean-interfaces/
-├── src/clean_interfaces/       # Main application code
+city-data-backend/
+├── src/city_data_backend/       # Main application code
 │   ├── __init__.py            # Package initialization
 │   ├── app.py                 # Application entry point
 │   ├── base.py                # Base component class
@@ -66,7 +66,7 @@ clean-interfaces/
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd clean-interfaces
+cd city-data-backend
 
 # Create virtual environment and install dependencies
 uv sync
@@ -84,7 +84,7 @@ For the REST API interface (FastAPI + Uvicorn):
 ```bash
 # From apps/python-backend/
 uv sync
-INTERFACE_TYPE=restapi PYTHONPATH=src uv run python -m clean_interfaces.main
+INTERFACE_TYPE=restapi PYTHONPATH=src uv run python -m city_data_backend.main
 # Health check
 curl http://localhost:8000/health
 ```
@@ -98,7 +98,7 @@ curl http://localhost:8000/health
 sqlite3 data/city_data.db < migrations/202501010000_add_experiments.sql
 
 # ワーカー起動
-PYTHONPATH=src uv run python -m clean_interfaces.worker
+PYTHONPATH=src uv run python -m city_data_backend.worker
 ```
 
 `POST /experiments` で作成された `pending` ジョブを1件ずつ処理し、結果を `insight_candidates` として保存します。
@@ -119,7 +119,7 @@ VALUES ('apps/python-backend/dspy/interactive/trainset_samples.json',
 SQL
 
 # ワーカー起動（Experiment と同一プロセスで交互にポーリング）
-PYTHONPATH=src uv run python -m clean_interfaces.worker
+PYTHONPATH=src uv run python -m city_data_backend.worker
 ```
 
 - 成功時: `compiled_program_artifacts` に成果物が保存され、`optimization_jobs.metric/artifact_id` を更新。
@@ -129,7 +129,7 @@ PYTHONPATH=src uv run python -m clean_interfaces.worker
 For the CLI interface (default):
 
 ```bash
-uv run python -m clean_interfaces.main --help
+uv run python -m city_data_backend.main --help
 ```
 
 ## Configuration
@@ -152,13 +152,13 @@ You can specify custom environment files using the `--dotenv` option:
 
 ```bash
 # Development environment
-uv run python -m clean_interfaces.main --dotenv dev.env
+uv run python -m city_data_backend.main --dotenv dev.env
 
 # Production environment
-uv run python -m clean_interfaces.main --dotenv prod.env
+uv run python -m city_data_backend.main --dotenv prod.env
 
 # Testing environment
-uv run python -m clean_interfaces.main --dotenv test.env
+uv run python -m city_data_backend.main --dotenv test.env
 ```
 
 ## Development
@@ -192,7 +192,7 @@ uv run pre-commit install
 nox -s test
 
 # Run specific test file
-uv run pytest tests/unit/clean_interfaces/test_app.py
+uv run pytest tests/unit/city_data_backend/test_app.py
 
 # Run with coverage
 uv run pytest --cov=src --cov-report=html
@@ -216,7 +216,7 @@ The default interface provides a command-line interface using Typer:
 
 ```bash
 # Run CLI interface
-INTERFACE_TYPE=cli uv run python -m clean_interfaces.main
+INTERFACE_TYPE=cli uv run python -m city_data_backend.main
 ```
 
 Features:
@@ -232,7 +232,7 @@ The REST API interface provides HTTP endpoints using FastAPI:
 
 ```bash
 # Run REST API interface
-INTERFACE_TYPE=restapi uv run python -m clean_interfaces.main
+INTERFACE_TYPE=restapi uv run python -m city_data_backend.main
 ```
 
 Features:
@@ -252,7 +252,7 @@ The application uses structured logging with multiple output formats:
 {
     "timestamp": "2025-07-20T10:30:45.123Z",
     "level": "info",
-    "logger": "clean_interfaces.app",
+    "logger": "city_data_backend.app",
     "message": "Application started",
     "interface": "cli"
 }
@@ -261,7 +261,7 @@ The application uses structured logging with multiple output formats:
 ### Console Format (Development)
 
 ```
-2025-07-20 10:30:45 [INFO] clean_interfaces.app: Application started interface=cli
+2025-07-20 10:30:45 [INFO] city_data_backend.app: Application started interface=cli
 ```
 
 ### OpenTelemetry Integration
@@ -350,7 +350,7 @@ from tests.helpers.pexpect_debug import run_cli_with_debug
 
 # Run with debug output enabled
 output, exitstatus = run_cli_with_debug(
-    "python -m clean_interfaces.main --help",
+    "python -m city_data_backend.main --help",
     env=clean_env,
     timeout=10,
     debug=True,  # Enable debug output

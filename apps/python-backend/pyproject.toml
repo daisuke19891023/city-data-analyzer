@@ -1,5 +1,5 @@
 [project]
-name = "clean-interfaces"
+name = "city-data-backend"
 version = "0.1.0"
 description = "A test project for verification"
 readme = "README.md"
@@ -20,7 +20,7 @@ dependencies = [
 ] # Populated by user or later steps if needed
 
 [project.scripts]
-clean-interfaces = "clean_interfaces.main:main"
+city-data-backend = "city_data_backend.main:main"
 
 [project.optional-dependencies]
 docs = [

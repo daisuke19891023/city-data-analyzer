@@ -14,9 +14,9 @@ class TestRestAPIInterfaceE2E:
         monkeypatch.setenv("INTERFACE_TYPE", "restapi")
 
         # Import here to ensure environment variable is set
-        from clean_interfaces.interfaces.factory import InterfaceFactory
-        from clean_interfaces.interfaces.restapi import RestAPIInterface
-        from clean_interfaces.types import InterfaceType
+        from city_data_backend.interfaces.factory import InterfaceFactory
+        from city_data_backend.interfaces.restapi import RestAPIInterface
+        from city_data_backend.types import InterfaceType
 
         factory = InterfaceFactory()
         interface = factory.create(InterfaceType.RESTAPI)
@@ -40,7 +40,7 @@ class TestRestAPIInterfaceE2E:
         response = client.get("/api/v1/welcome")
         assert response.status_code == 200
         data = response.json()
-        assert data["message"] == "Welcome to Clean Interfaces!"
+        assert data["message"] == "Welcome to City Data Backend!"
         assert data["hint"] == "Type --help for more information"
         assert data["interface"] == "RestAPI"
 
@@ -61,6 +61,6 @@ class TestRestAPIInterfaceE2E:
         response = client.get("/openapi.json")
         assert response.status_code == 200
         schema = response.json()
-        assert schema["info"]["title"] == "Clean Interfaces API"
+        assert schema["info"]["title"] == "City Data Backend API"
         assert "/health" in schema["paths"]
         assert "/api/v1/welcome" in schema["paths"]

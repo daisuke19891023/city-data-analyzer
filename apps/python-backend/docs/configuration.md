@@ -1,6 +1,6 @@
 # Configuration Guide
 
-Clean Interfaces uses environment variables for configuration, with support for `.env` files and command-line options.
+City Data Backend uses environment variables for configuration, with support for `.env` files and command-line options.
 
 ## Configuration Methods
 
@@ -11,7 +11,7 @@ Set environment variables directly in your shell:
 ```bash
 export INTERFACE_TYPE=restapi
 export LOG_LEVEL=DEBUG
-uv run python -m clean_interfaces.main
+uv run python -m city_data_backend.main
 ```
 
 ### 2. Default .env File
@@ -30,7 +30,7 @@ LOG_FORMAT=json
 Use the `--dotenv` option to specify custom configuration files:
 
 ```bash
-uv run python -m clean_interfaces.main --dotenv production.env
+uv run python -m city_data_backend.main --dotenv production.env
 ```
 
 ## Configuration Options
@@ -104,7 +104,7 @@ LOG_FILE_PATH=tests/logs/test.log
 INTERFACE_TYPE=restapi
 LOG_LEVEL=ERROR
 LOG_FORMAT=json
-LOG_FILE_PATH=/var/log/clean-interfaces/app.log
+LOG_FILE_PATH=/var/log/city-data-backend/app.log
 # OpenTelemetry exporter removed
 ```
 
@@ -129,7 +129,7 @@ os.environ['LOG_LEVEL'] = 'DEBUG'
 os.environ['INTERFACE_TYPE'] = 'restapi'
 
 # Then run the application
-from clean_interfaces.app import run_app
+from city_data_backend.app import run_app
 run_app()
 ```
 
@@ -154,7 +154,7 @@ To debug configuration issues:
 1. **Check loaded values**:
 
     ```bash
-    LOG_LEVEL=DEBUG uv run python -m clean_interfaces.main
+    LOG_LEVEL=DEBUG uv run python -m city_data_backend.main
     ```
 
 2. **Verify .env file**:
@@ -209,10 +209,10 @@ For custom configurations:
 
 ```bash
 # Good
-uv run python -m clean_interfaces.main --dotenv config/production.env
+uv run python -m city_data_backend.main --dotenv config/production.env
 
 # Less clear
-uv run python -m clean_interfaces.main --dotenv prod.env
+uv run python -m city_data_backend.main --dotenv prod.env
 ```
 
 ### 5. Validate Early
@@ -221,7 +221,7 @@ Test configuration in development:
 
 ```bash
 # Test production config locally
-uv run python -m clean_interfaces.main --dotenv prod.env
+uv run python -m city_data_backend.main --dotenv prod.env
 ```
 
 ## Troubleshooting

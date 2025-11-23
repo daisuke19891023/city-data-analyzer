@@ -19,7 +19,7 @@ Models for REST API request and response handling.
 Health check response model.
 
 ```python
-from clean_interfaces.models.api import HealthResponse
+from city_data_backend.models.api import HealthResponse
 from datetime import datetime
 
 class HealthResponse(BaseModel):
@@ -47,13 +47,13 @@ print(health.model_dump_json())
 Welcome endpoint response model.
 
 ```python
-from clean_interfaces.models.api import WelcomeResponse
+from city_data_backend.models.api import WelcomeResponse
 
 class WelcomeResponse(BaseModel):
     """Welcome response model."""
     
     message: str = Field(
-        default="Welcome to Clean Interfaces!",
+        default="Welcome to City Data Backend!",
         description="Welcome message"
     )
     hint: str = Field(
@@ -78,7 +78,7 @@ class WelcomeResponse(BaseModel):
 welcome = WelcomeResponse(version="1.2.0")
 print(welcome.model_dump())
 # {
-#     "message": "Welcome to Clean Interfaces!",
+#     "message": "Welcome to City Data Backend!",
 #     "hint": "Type --help for more information",
 #     "version": "1.2.0"
 # }
@@ -89,7 +89,7 @@ print(welcome.model_dump())
 Error response model for API errors.
 
 ```python
-from clean_interfaces.models.api import ErrorResponse
+from city_data_backend.models.api import ErrorResponse
 
 class ErrorResponse(BaseModel):
     """Error response model."""
@@ -126,13 +126,13 @@ Models for CLI input/output operations.
 Welcome message model for CLI display.
 
 ```python
-from clean_interfaces.models.io import WelcomeMessage
+from city_data_backend.models.io import WelcomeMessage
 
 class WelcomeMessage(BaseModel):
     """Welcome message for CLI."""
     
     message: str = Field(
-        default="Welcome to Clean Interfaces!",
+        default="Welcome to City Data Backend!",
         description="Main welcome message"
     )
     hint: str = Field(
@@ -149,7 +149,7 @@ class WelcomeMessage(BaseModel):
 #### Example
 
 ```python
-from clean_interfaces.models.io import WelcomeMessage
+from city_data_backend.models.io import WelcomeMessage
 import typer
 
 welcome = WelcomeMessage()
@@ -164,7 +164,7 @@ typer.echo(welcome.hint)
 All models validate input data:
 
 ```python
-from clean_interfaces.models.api import ErrorResponse
+from city_data_backend.models.api import ErrorResponse
 
 # Valid
 error = ErrorResponse(error="Something went wrong")
@@ -181,7 +181,7 @@ except ValidationError as e:
 Models support various serialization formats:
 
 ```python
-from clean_interfaces.models.api import HealthResponse
+from city_data_backend.models.api import HealthResponse
 
 health = HealthResponse()
 
@@ -203,7 +203,7 @@ json_clean = health.model_dump_json(exclude_none=True)
 Models can generate JSON Schema:
 
 ```python
-from clean_interfaces.models.api import WelcomeResponse
+from city_data_backend.models.api import WelcomeResponse
 
 schema = WelcomeResponse.model_json_schema()
 print(schema)
@@ -249,7 +249,7 @@ Models integrate seamlessly with FastAPI:
 
 ```python
 from fastapi import FastAPI
-from clean_interfaces.models.api import WelcomeResponse, ErrorResponse
+from city_data_backend.models.api import WelcomeResponse, ErrorResponse
 
 app = FastAPI()
 

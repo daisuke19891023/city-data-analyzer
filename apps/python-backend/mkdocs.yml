@@ -1,10 +1,10 @@
-site_name: Clean Interfaces
+site_name: City Data Backend
 site_description: A flexible Python application framework with multiple interface types
 site_author: Daisuke Okamoto
-site_url: https://your-github-username.github.io/clean-interfaces/
+site_url: https://your-github-username.github.io/city-data-backend/
 
-repo_name: your-github-username/clean-interfaces
-repo_url: https://github.com/your-github-username/clean-interfaces
+repo_name: your-github-username/city-data-backend
+repo_url: https://github.com/your-github-username/city-data-backend
 edit_uri: edit/main/docs/
 
 theme:
@@ -65,9 +65,9 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/your-github-username/clean-interfaces
+      link: https://github.com/your-github-username/city-data-backend
     - icon: fontawesome/brands/python
-      link: https://pypi.org/project/clean-interfaces/
+      link: https://pypi.org/project/city-data-backend/
   version:
     provider: mike
 
