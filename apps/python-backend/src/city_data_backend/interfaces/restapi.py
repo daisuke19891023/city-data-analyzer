@@ -103,8 +103,20 @@ def http_error_handler(_request: Request, exc: HTTPException) -> JSONResponse:
     )
 
 
-def authenticate_request(credentials: AuthCredentials) -> HTTPAuthorizationCredentials:
-    """Validate bearer token against configured settings."""
+def authenticate_request(
+    credentials: AuthCredentials,
+) -> HTTPAuthorizationCredentials | None:
+    """Validate bearer token against configured settings.
+
+    When no API token is configured, authentication is treated as disabled and the
+    request is allowed to proceed without credentials. This preserves the
+    previous default behavior where deployments without ``API_TOKEN`` set expose
+    the API without authentication.
+    """
+    settings = get_auth_settings()
+    if not settings.api_token:
+        return None
+
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -112,8 +124,7 @@ def authenticate_request(credentials: AuthCredentials) -> HTTPAuthorizationCrede
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    settings = get_auth_settings()
-    if settings.api_token and credentials.credentials == settings.api_token:
+    if credentials.credentials == settings.api_token:
         return credentials
 
     raise HTTPException(
@@ -242,18 +253,19 @@ class RestAPIInterface(BaseInterface):
             routes=self.app.routes,
         )
 
-        security_scheme = {
-            "type": "http",
-            "scheme": "bearer",
-            "bearerFormat": "JWT",
-        }
-        components = openapi_schema.setdefault("components", {})
-        security_schemes = components.setdefault("securitySchemes", {})
-        security_schemes.setdefault("bearerAuth", security_scheme)
+        if get_auth_settings().api_token:
+            security_scheme = {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+            components = openapi_schema.setdefault("components", {})
+            security_schemes = components.setdefault("securitySchemes", {})
+            security_schemes.setdefault("bearerAuth", security_scheme)
 
-        for path_item in openapi_schema.get("paths", {}).values():
-            for method in path_item.values():
-                method.setdefault("security", [{"bearerAuth": []}])
+            for path_item in openapi_schema.get("paths", {}).values():
+                for method in path_item.values():
+                    method.setdefault("security", [{"bearerAuth": []}])
 
         self._openapi_schema = openapi_schema
         self.app.openapi_schema = openapi_schema  # type: ignore[assignment]
