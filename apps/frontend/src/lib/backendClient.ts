@@ -253,13 +253,17 @@ function describeTrainset(trainset: Array<Record<string, unknown>>): string {
 }
 
 function toOptimizationJob(artifact: OptimizationArtifactResponse): OptimizationJob {
+    // Artifacts are created synchronously and flagged as inactive by default, so
+    // treat them as completed so the UI allows activation toggling.
+    const status: OptimizationJob['status'] = 'completed';
+
     return {
         id: artifact.id.toString(),
         provider: 'dspy',
         model: artifact.version,
         dataset: describeTrainset(artifact.trainset),
         trainset: describeTrainset(artifact.trainset),
-        status: artifact.active ? 'completed' : 'pending',
+        status,
         artifactVersion: artifact.version,
         createdAt: artifact.created_at
     };
