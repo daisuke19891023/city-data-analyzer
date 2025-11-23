@@ -83,6 +83,18 @@ def test_optimization_validation_and_toggle_errors(client: TestClient) -> None:
     invalid_resp = client.post("/dspy/optimization", json=invalid_payload)
     assert invalid_resp.status_code == 400
 
+    traversal_payload: dict[str, object] = {
+        "version": "../escape",  # path traversal attempt
+        "trainset": [{"question": "Q", "query_spec": {"filters": []}}],
+        "metric": None,
+    }
+    traversal_resp = client.post("/dspy/optimization", json=traversal_payload)
+    assert traversal_resp.status_code == 400
+    assert traversal_resp.json()["detail"]
+
+    # Ensure nothing was written for the traversal attempt
+    assert not list(dspy_program.DEFAULT_ARTIFACT_ROOT.glob("**/*.json"))
+
     client_with_patch = cast("Any", client)
     toggle_resp = client_with_patch.patch(
         "/dspy/optimization/999",

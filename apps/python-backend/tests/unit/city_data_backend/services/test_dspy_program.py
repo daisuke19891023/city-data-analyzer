@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+import pytest
+
 from city_data_backend.database import configure_engine, get_session
 from city_data_backend.db_models import AnalysisQuery
 from city_data_backend.models.dspy import (
@@ -113,6 +115,47 @@ def test_persist_compiled_program_writes_file_and_record(tmp_path: Path) -> None
     assert Path(artifact.path).exists()
     assert Path(artifact.path).parent == tmp_path
     assert artifact.active is False
+
+
+def test_persist_compiled_program_rejects_invalid_version(tmp_path: Path) -> None:
+    """Reject suspicious version strings and do not write artifacts."""
+    os.environ["DATABASE_URL"] = "sqlite+pysqlite:///:memory:?cache=shared"
+    configure_engine(os.environ["DATABASE_URL"])
+    session = get_session()
+    init_database(session)
+
+    with pytest.raises(ValueError, match="Version may only contain"):
+        persist_compiled_program(
+            version="../evil",  # path traversal attempt
+            trainset=[{"question": "Q", "query_spec": {"filters": []}}],
+            metric=None,
+            session=session,
+            base_dir=tmp_path,
+        )
+
+    assert not list(tmp_path.glob("**/*.json"))
+
+
+def test_persist_compiled_program_rejects_outside_output_path(tmp_path: Path) -> None:
+    """Prevent writing artifacts outside the configured root directory."""
+    os.environ["DATABASE_URL"] = "sqlite+pysqlite:///:memory:?cache=shared"
+    configure_engine(os.environ["DATABASE_URL"])
+    session = get_session()
+    init_database(session)
+
+    outside_path = tmp_path.parent / "escape.json"
+
+    with pytest.raises(ValueError, match="must be within artifact root"):
+        persist_compiled_program(
+            version="v1",
+            trainset=[{"question": "Q", "query_spec": {"filters": []}}],
+            metric=None,
+            session=session,
+            base_dir=tmp_path,
+            output_path=outside_path,
+        )
+
+    assert not outside_path.exists()
 
 
 def test_load_compiled_program_prefers_active_version(tmp_path: Path) -> None:
