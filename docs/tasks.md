@@ -8,6 +8,8 @@
 - [DONE] frontend フォーマットエラーの修正（`src/lib/dataSource.ts` を Prettier 準拠に整形）（2025-11-23）。
 - [DONE] backendClient が利用するルートの API 設計書を `docs/api-spec.md` に追加し、メソッド/スキーマ/エラーパターンを整理（2025-11-23）。
 
+- [DONE] DSPy 最適化ジョブを services/optimization + ワーカーに移植し、`optimization_jobs` キューから成果物保存とメトリクス記録、再実行方針のドキュメントを追加（2025-11-24）。
+
 ## フェーズ1: 起動確認 & 開発環境整備
 ステータス: 2025-11-22 時点でローカル確認済み（Node v20.19.5、`npm run --workspace frontend dev -- --host --port 3000`、`INTERFACE_TYPE=restapi PYTHONPATH=src uv run python -m clean_interfaces.main` で /health 応答を確認）。
 ### Task 1-1: フロントエンドの起動確認

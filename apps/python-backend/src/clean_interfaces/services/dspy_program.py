@@ -46,13 +46,14 @@ def persist_compiled_program(
     metric: dict[str, Any] | None,
     session: Session | None = None,
     base_dir: Path | None = None,
+    output_path: Path | None = None,
 ) -> CompiledProgramArtifact:
     """Persist compiled artifact JSON and record metadata in the database."""
     managed_session = session is None
     db_session = session or get_session()
     try:
-        artifact_dir = _artifact_root(base_dir)
-        artifact_path = artifact_dir / f"{version}.json"
+        artifact_dir = output_path.parent if output_path else _artifact_root(base_dir)
+        artifact_path = output_path if output_path else artifact_dir / f"{version}.json"
         payload = {"version": version, "trainset": trainset, "metric": metric}
         artifact_path.write_text(
             json.dumps(payload, ensure_ascii=False, indent=2),

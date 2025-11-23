@@ -103,6 +103,29 @@ PYTHONPATH=src uv run python -m clean_interfaces.worker
 
 `POST /experiments` で作成された `pending` ジョブを1件ずつ処理し、結果を `insight_candidates` として保存します。
 
+### Optimization compilation worker
+
+最適化ジョブは `optimization_jobs` テーブルに投入し、trainset の読み込み→評価→コンパイル→成果物保存までをワーカーで実行します。
+
+```bash
+# マイグレーション適用例
+sqlite3 data/city_data.db < migrations/202503010000_add_optimization_jobs.sql
+
+# ジョブ投入サンプル
+sqlite3 data/city_data.db <<'SQL'
+INSERT INTO optimization_jobs (trainset_path, version, status, created_at, updated_at)
+VALUES ('apps/python-backend/dspy/interactive/trainset_samples.json',
+        'interactive-compiled-manual', 'pending', datetime('now'), datetime('now'));
+SQL
+
+# ワーカー起動（Experiment と同一プロセスで交互にポーリング）
+PYTHONPATH=src uv run python -m clean_interfaces.worker
+```
+
+- 成功時: `compiled_program_artifacts` に成果物が保存され、`optimization_jobs.metric/artifact_id` を更新。
+- 失敗時: `status='failed'` と `error_message` を残し、structlog で例外スタックを出力。
+- リトライ方針: 自動リトライは行わず、原因調査後に `status` を `pending` に戻すか新規ジョブを挿入して再実行してください（失敗のまま無限ループさせないため）。
+
 For the CLI interface (default):
 
 ```bash

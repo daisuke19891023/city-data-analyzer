@@ -374,7 +374,7 @@ class RestAPIInterface(BaseInterface):
             artifacts = list_program_artifacts(db)
             return [to_artifact_response(artifact) for artifact in artifacts]
 
-        router = cast(Any, APIRouter())
+        router = cast("Any", APIRouter())
 
         @router.patch(
             "/dspy/optimization/{artifact_id}",
@@ -398,7 +398,7 @@ class RestAPIInterface(BaseInterface):
                 ) from exc
             return to_artifact_response(artifact)
 
-        app_router = cast(Any, self.app)
+        app_router = cast("Any", self.app)
         app_router.include_router(router)
 
     def _setup_feedback_routes(self) -> None:
