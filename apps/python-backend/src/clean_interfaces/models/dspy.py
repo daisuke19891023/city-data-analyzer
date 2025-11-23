@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime  # noqa: TC003
 from typing import Annotated, Any, TypedDict
 
 from pydantic import BaseModel, Field
@@ -92,3 +93,29 @@ class InteractiveResponse(BaseModel):
     summary: str | None = None
     analysis_id: int | None = None
     program_version: str | None = None
+
+
+class OptimizationArtifactRequest(BaseModel):
+    """Payload to register a compiled program artifact."""
+
+    version: str
+    trainset: list[dict[str, Any]]
+    metric: dict[str, Any] | None = None
+
+
+class OptimizationArtifactResponse(BaseModel):
+    """Metadata for a compiled program artifact."""
+
+    id: int
+    version: str
+    trainset: list[dict[str, Any]]
+    metric: dict[str, Any] | None
+    path: str
+    active: bool
+    created_at: datetime
+
+
+class OptimizationToggleRequest(BaseModel):
+    """Request to toggle artifact activation."""
+
+    active: bool = Field(default=True)

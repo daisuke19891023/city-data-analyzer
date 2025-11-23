@@ -331,3 +331,22 @@ class InsightFeedback(Base):
         "AnalysisQuery",
         back_populates="feedback",
     )
+
+
+class CompiledProgramArtifact(Base):
+    """Metadata for compiled DSPy program artifacts."""
+
+    __tablename__ = "compiled_program_artifacts"
+    __table_args__ = (UniqueConstraint("version", name="uq_compiled_program_version"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    version: Mapped[str] = mapped_column(String(100), nullable=False)
+    trainset: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False)
+    metric: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    path: Mapped[str] = mapped_column(String(500), nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(UTC),
+        nullable=False,
+    )

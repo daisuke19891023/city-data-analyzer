@@ -1,0 +1,92 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, cast
+
+from requests import Response, Session
+from fastapi.testclient import TestClient
+
+from clean_interfaces.database import configure_engine, session_scope
+from clean_interfaces.interfaces.restapi import RestAPIInterface
+from clean_interfaces.models.dspy import OptimizationArtifactRequest
+from clean_interfaces.services import dspy_program
+from clean_interfaces.services.datasets import init_database
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+
+def setup_client(tmp_path: Path) -> TestClient:
+    """Configure in-memory DB and return a FastAPI test client."""
+    configure_engine("sqlite+pysqlite:///:memory:")
+    with session_scope() as session:
+        init_database(session)
+    dspy_program.DEFAULT_ARTIFACT_ROOT = tmp_path
+    interface = RestAPIInterface()
+    return TestClient(interface.app)
+
+
+def test_optimization_lifecycle(tmp_path: Path) -> None:
+    """End-to-end lifecycle for optimization endpoints."""
+    client = setup_client(tmp_path)
+
+    trainset_v1: list[dict[str, Any]] = [
+        {"question": "Q1", "query_spec": {"filters": []}},
+    ]
+    payload = OptimizationArtifactRequest(
+        version="v1",
+        trainset=trainset_v1,
+        metric={"score": 0.9},
+    )
+    create_resp = client.post("/dspy/optimization", json=payload.model_dump())
+    assert create_resp.status_code == 201
+    created = create_resp.json()
+    assert created["version"] == "v1"
+    assert created["active"] is False
+
+    history = client.get("/dspy/optimization/history")
+    assert history.status_code == 200
+    assert len(history.json()) == 1
+
+    trainset_v2: list[dict[str, Any]] = [
+        {"question": "Q2", "query_spec": {"filters": []}},
+    ]
+    payload_v2 = OptimizationArtifactRequest(
+        version="v2",
+        trainset=trainset_v2,
+        metric=None,
+    )
+    create_resp_v2 = client.post("/dspy/optimization", json=payload_v2.model_dump())
+    assert create_resp_v2.status_code == 201
+    created_v2 = create_resp_v2.json()
+
+    http_client = cast(Session, client)
+    activate: Response = http_client.request(
+        "PATCH",
+        f"/dspy/optimization/{created_v2['id']}",
+        json={"active": True},
+    )
+    assert activate.status_code == 200
+    assert activate.json()["active"] is True
+
+    latest = client.get("/dspy/optimization")
+    assert latest.status_code == 200
+    assert latest.json()["id"] == created_v2["id"]
+
+
+def test_optimization_validation_and_toggle_errors(tmp_path: Path) -> None:
+    """Ensure validation and activation errors return appropriate responses."""
+    client = setup_client(tmp_path)
+
+    invalid_payload: dict[str, object] = {
+        "version": "v-invalid",
+        "trainset": "bad",
+        "metric": {},
+    }
+    invalid_resp = client.post("/dspy/optimization", json=invalid_payload)
+    assert invalid_resp.status_code == 400
+
+    http_client = cast(Session, client)
+    toggle_resp: Response = http_client.request(
+        "PATCH", "/dspy/optimization/999", json={"active": True}
+    )
+    assert toggle_resp.status_code == 404
