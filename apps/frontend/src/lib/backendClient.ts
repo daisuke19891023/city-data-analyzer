@@ -231,6 +231,40 @@ export type OptimizationPayload = {
     trainset: string;
 };
 
+type OptimizationArtifactResponse = {
+    id: number;
+    version: string;
+    trainset: Array<Record<string, unknown>>;
+    metric: Record<string, unknown> | null;
+    path: string;
+    active: boolean;
+    created_at: string;
+};
+
+function describeTrainset(trainset: Array<Record<string, unknown>>): string {
+    if (!trainset.length) return 'unknown';
+    const first = trainset[0];
+    const dataset = first.dataset ?? first.name ?? first.id;
+    const split = first.trainset ?? first.split ?? first.version;
+    if (dataset && split) return `${dataset}/${split}`;
+    if (dataset) return String(dataset);
+    if (split) return String(split);
+    return JSON.stringify(first);
+}
+
+function toOptimizationJob(artifact: OptimizationArtifactResponse): OptimizationJob {
+    return {
+        id: artifact.id.toString(),
+        provider: 'dspy',
+        model: artifact.version,
+        dataset: describeTrainset(artifact.trainset),
+        trainset: describeTrainset(artifact.trainset),
+        status: artifact.active ? 'completed' : 'pending',
+        artifactVersion: artifact.version,
+        createdAt: artifact.created_at
+    };
+}
+
 const optimizationFallback: OptimizationJob[] = [
     {
         id: 'optim-demo-1',
@@ -257,34 +291,50 @@ const optimizationFallback: OptimizationJob[] = [
 export async function startOptimization(
     payload: OptimizationPayload
 ): Promise<{ jobId: string } | null> {
-    const response = await safeNodeFetch<{ job_id?: string; id?: string }>(
-        '/api/agent/optimization',
+    const response = await safeFetch<OptimizationArtifactResponse>(
+        '/dspy/optimization',
         {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                version: `${payload.provider}:${payload.model}`,
+                trainset: [
+                    {
+                        dataset: payload.dataset,
+                        trainset: payload.trainset
+                    }
+                ],
+                metric: {
+                    provider: payload.provider,
+                    model: payload.model
+                }
+            })
         }
     );
 
-    const jobId = response?.job_id || response?.id;
-    return jobId ? { jobId } : null;
+    const jobId = response?.id;
+    return jobId ? { jobId: jobId.toString() } : null;
 }
 
 export async function listOptimizationJobs(): Promise<OptimizationJob[]> {
-    return (
-        (await safeNodeFetch<OptimizationJob[]>('/api/agent/optimization')) ||
-        optimizationFallback
+    const artifacts = await safeFetch<OptimizationArtifactResponse[]>(
+        '/dspy/optimization/history'
     );
+    return artifacts?.map(toOptimizationJob) || optimizationFallback;
 }
 
 export async function activateOptimizationArtifact(
     jobId: string
 ): Promise<boolean> {
-    const response = await safeNodeFetch<{ ok: boolean }>(
-        `/api/agent/optimization/${jobId}/activate`,
-        { method: 'POST' }
+    const response = await safeFetch<OptimizationArtifactResponse>(
+        `/dspy/optimization/${Number(jobId)}`,
+        {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ active: true })
+        }
     );
-    return response?.ok ?? false;
+    return Boolean(response);
 }
 
 export async function fetchInsightCandidates(experimentId: number): Promise<{

@@ -137,8 +137,8 @@ export function OptimizationPage(): JSX.Element {
                     <Badge variant="accent">新しいバックエンドAPI</Badge>
                 </div>
                 <p className="hero__subtitle">
-                    provider / model / dataset / trainset を指定して Node 経由の
-                    /api/agent/optimization
+                    provider / model / dataset / trainset を指定して FastAPI の
+                    /dspy/optimization
                     を呼び出し、進行中のジョブを追跡します。
                 </p>
             </section>
