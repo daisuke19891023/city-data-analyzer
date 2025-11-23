@@ -8,6 +8,8 @@ from pathlib import Path
 
 import structlog
 
+from clean_interfaces.database import get_session
+from clean_interfaces.services.datasets import init_database
 from clean_interfaces.services.optimization import OptimizationService
 
 logger = structlog.get_logger()
@@ -21,12 +23,17 @@ def compile_program(trainset_path: Path, output_path: Path, version: str) -> Non
         output=str(output_path),
         version=version,
     )
-    service = OptimizationService()
-    service.compile_interactive(
-        trainset_path,
-        version=version,
-        output_path=output_path,
-    )
+    session = get_session()
+    try:
+        init_database(session)
+        service = OptimizationService(session=session)
+        service.compile_interactive(
+            trainset_path,
+            version=version,
+            output_path=output_path,
+        )
+    finally:
+        session.close()
 
 
 if __name__ == "__main__":
