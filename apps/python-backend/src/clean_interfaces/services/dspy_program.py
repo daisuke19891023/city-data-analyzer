@@ -54,10 +54,6 @@ def persist_compiled_program(
         artifact_dir = _artifact_root(base_dir)
         artifact_path = artifact_dir / f"{version}.json"
         payload = {"version": version, "trainset": trainset, "metric": metric}
-        artifact_path.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
 
         record = CompiledProgramArtifact(
             version=version,
@@ -68,11 +64,22 @@ def persist_compiled_program(
         )
         db_session.add(record)
         try:
-            db_session.commit()
+            db_session.flush()
         except IntegrityError as exc:
             db_session.rollback()
             msg = f"Artifact version '{version}' already exists"
             raise ValueError(msg) from exc
+
+        try:
+            artifact_path.write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+        except Exception:
+            db_session.rollback()
+            raise
+
+        db_session.commit()
         db_session.refresh(record)
         return record
     finally:
