@@ -111,6 +111,20 @@ async function safeFetch<T>(
     }
 }
 
+async function safeNodeFetch<T>(
+    path: string,
+    options?: Parameters<typeof fetch>[1]
+): Promise<T | null> {
+    try {
+        const response = await fetch(path, options);
+        if (!response.ok) return null;
+        return (await response.json()) as T;
+    } catch (error) {
+        console.warn('Node backend fetch failed', path, error);
+        return null;
+    }
+}
+
 export async function fetchDatasets(): Promise<
     {
         id: number;
@@ -197,6 +211,80 @@ export async function fetchExperimentDetail(experimentId: number): Promise<{
     }>;
 } | null> {
     return await safeFetch(`/experiments/${experimentId}`);
+}
+
+export type OptimizationJob = {
+    id: string;
+    provider: string;
+    model: string;
+    dataset: string;
+    trainset: string;
+    status: 'pending' | 'running' | 'completed' | 'failed';
+    artifactVersion?: string | null;
+    createdAt?: string;
+};
+
+export type OptimizationPayload = {
+    provider: string;
+    model: string;
+    dataset: string;
+    trainset: string;
+};
+
+const optimizationFallback: OptimizationJob[] = [
+    {
+        id: 'optim-demo-1',
+        provider: 'openai',
+        model: 'gpt-4o-mini',
+        dataset: 'population-trend',
+        trainset: 'train-v1',
+        status: 'running',
+        artifactVersion: null,
+        createdAt: '2024-10-10T05:00:00Z'
+    },
+    {
+        id: 'optim-demo-2',
+        provider: 'anthropic',
+        model: 'claude-3.5-sonnet',
+        dataset: 'childcare-support',
+        trainset: 'train-v0',
+        status: 'completed',
+        artifactVersion: 'v0.3.2',
+        createdAt: '2024-10-09T02:00:00Z'
+    }
+];
+
+export async function startOptimization(
+    payload: OptimizationPayload
+): Promise<{ jobId: string } | null> {
+    const response = await safeNodeFetch<{ job_id?: string; id?: string }>(
+        '/api/agent/optimization',
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }
+    );
+
+    const jobId = response?.job_id || response?.id;
+    return jobId ? { jobId } : null;
+}
+
+export async function listOptimizationJobs(): Promise<OptimizationJob[]> {
+    return (
+        (await safeNodeFetch<OptimizationJob[]>('/api/agent/optimization')) ||
+        optimizationFallback
+    );
+}
+
+export async function activateOptimizationArtifact(
+    jobId: string
+): Promise<boolean> {
+    const response = await safeNodeFetch<{ ok: boolean }>(
+        `/api/agent/optimization/${jobId}/activate`,
+        { method: 'POST' }
+    );
+    return response?.ok ?? false;
 }
 
 export async function fetchInsightCandidates(experimentId: number): Promise<{
