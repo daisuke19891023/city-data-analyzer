@@ -4,7 +4,7 @@ function cn(...classes: Array<string | undefined>): string {
     return classes.filter(Boolean).join(' ');
 }
 
-type BadgeVariant = 'neutral' | 'success' | 'warning' | 'accent';
+type BadgeVariant = 'neutral' | 'success' | 'warning' | 'accent' | 'error';
 
 type BadgeProps = {
     children: ReactNode;
@@ -21,7 +21,8 @@ export function Badge({
         neutral: '',
         success: 'ui-badge--success',
         warning: 'ui-badge--warning',
-        accent: 'ui-badge--accent'
+        accent: 'ui-badge--accent',
+        error: 'ui-badge--error'
     };
 
     return (
