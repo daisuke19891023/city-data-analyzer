@@ -6,8 +6,8 @@ import argparse
 import logging
 from pathlib import Path
 
-from clean_interfaces.database import configure_engine, session_scope
-from clean_interfaces.services.datasets import DatasetRepository, init_database
+from city_data_backend.database import configure_engine, session_scope
+from city_data_backend.services.datasets import DatasetRepository, init_database
 
 logger = logging.getLogger(__name__)
 

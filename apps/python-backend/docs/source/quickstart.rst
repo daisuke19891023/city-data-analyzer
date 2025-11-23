@@ -1,7 +1,7 @@
 Quick Start Guide
 =================
 
-This guide will help you get started with Clean Interfaces quickly.
+This guide will help you get started with City Data Backend quickly.
 
 Basic Usage
 -----------
@@ -14,10 +14,10 @@ The default interface is the command-line interface:
 .. code-block:: bash
 
    # Run with default settings
-   uv run python -m clean_interfaces.main
+   uv run python -m city_data_backend.main
 
    # Run with custom environment file
-   uv run python -m clean_interfaces.main --dotenv prod.env
+   uv run python -m city_data_backend.main --dotenv prod.env
 
 Running the REST API Interface
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -27,11 +27,11 @@ To run the REST API interface:
 .. code-block:: bash
 
    # Set interface type and run
-   INTERFACE_TYPE=restapi uv run python -m clean_interfaces.main
+   INTERFACE_TYPE=restapi uv run python -m city_data_backend.main
 
    # Or use a custom .env file
    echo "INTERFACE_TYPE=restapi" > api.env
-   uv run python -m clean_interfaces.main --dotenv api.env
+   uv run python -m city_data_backend.main --dotenv api.env
 
 Configuration Options
 ---------------------
@@ -73,13 +73,13 @@ Use different configuration files for different environments:
 .. code-block:: bash
 
    # Development
-   uv run python -m clean_interfaces.main --dotenv dev.env
+   uv run python -m city_data_backend.main --dotenv dev.env
 
    # Production
-   uv run python -m clean_interfaces.main --dotenv prod.env
+   uv run python -m city_data_backend.main --dotenv prod.env
 
    # Testing
-   uv run python -m clean_interfaces.main --dotenv test.env
+   uv run python -m city_data_backend.main --dotenv test.env
 
 Example Configurations
 ----------------------
@@ -104,7 +104,7 @@ Production Configuration
    INTERFACE_TYPE=restapi
    LOG_LEVEL=WARNING
    LOG_FORMAT=json
-   LOG_FILE_PATH=/var/log/clean-interfaces/app.log
+   LOG_FILE_PATH=/var/log/city-data-backend/app.log
    # OpenTelemetry exporter removed
 
 Logging Examples
@@ -120,7 +120,7 @@ JSON Format
    {
      "timestamp": "2025-07-20T10:30:45.123Z",
      "level": "info",
-     "logger": "clean_interfaces.app",
+     "logger": "city_data_backend.app",
      "message": "Application started",
      "interface": "cli"
    }
@@ -130,7 +130,7 @@ Console Format
 
 .. code-block:: text
 
-   2025-07-20 10:30:45 [INFO] clean_interfaces.app: Application started interface=cli
+   2025-07-20 10:30:45 [INFO] city_data_backend.app: Application started interface=cli
 
 Next Steps
 ----------

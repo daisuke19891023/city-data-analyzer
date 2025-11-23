@@ -1,7 +1,7 @@
-clean_interfaces.app
+city_data_backend.app
 ====================
 
-.. automodule:: clean_interfaces.app
+.. automodule:: city_data_backend.app
    :members:
    :undoc-members:
    :show-inheritance:
@@ -10,7 +10,7 @@ clean_interfaces.app
 Application Class
 -----------------
 
-.. autoclass:: clean_interfaces.app.Application
+.. autoclass:: city_data_backend.app.Application
    :members:
    :undoc-members:
    :show-inheritance:
@@ -19,4 +19,4 @@ Application Class
 Functions
 ---------
 
-.. autofunction:: clean_interfaces.app.run_app
+.. autofunction:: city_data_backend.app.run_app

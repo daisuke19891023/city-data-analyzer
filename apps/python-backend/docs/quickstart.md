@@ -1,6 +1,6 @@
 # Quick Start
 
-Get up and running with Clean Interfaces in minutes!
+Get up and running with City Data Backend in minutes!
 
 ## Prerequisites
 
@@ -15,8 +15,8 @@ Before you begin, ensure you have:
 ### 1. Get the Code
 
 ```bash
-git clone https://github.com/your-username/clean-interfaces.git
-cd clean-interfaces
+git clone https://github.com/your-username/city-data-backend.git
+cd city-data-backend
 ```
 
 ### 2. Install Dependencies
@@ -36,13 +36,13 @@ cp .env.example .env
 === "CLI Interface"
 
     ```bash
-    uv run python -m clean_interfaces.main
+    uv run python -m city_data_backend.main
     ```
 
 === "REST API Interface"
 
     ```bash
-    INTERFACE_TYPE=restapi uv run python -m clean_interfaces.main
+    INTERFACE_TYPE=restapi uv run python -m city_data_backend.main
     ```
 
 ## Basic Usage Examples
@@ -53,13 +53,13 @@ The CLI interface provides an interactive command-line experience:
 
 ```bash
 # Run with default settings
-uv run python -m clean_interfaces.main
+uv run python -m city_data_backend.main
 
 # Run with debug logging
-LOG_LEVEL=DEBUG uv run python -m clean_interfaces.main
+LOG_LEVEL=DEBUG uv run python -m city_data_backend.main
 
 # Run with custom environment file
-uv run python -m clean_interfaces.main --dotenv dev.env
+uv run python -m city_data_backend.main --dotenv dev.env
 ```
 
 ### Using the REST API Interface
@@ -68,7 +68,7 @@ The REST API interface starts a FastAPI server:
 
 ```bash
 # Start the API server
-INTERFACE_TYPE=restapi uv run python -m clean_interfaces.main
+INTERFACE_TYPE=restapi uv run python -m city_data_backend.main
 
 # The API will be available at http://localhost:8000
 # API documentation at http://localhost:8000/docs
@@ -101,7 +101,7 @@ LOG_FORMAT=console
 Run with development settings:
 
 ```bash
-uv run python -m clean_interfaces.main --dotenv dev.env
+uv run python -m city_data_backend.main --dotenv dev.env
 ```
 
 ### Production Setup
@@ -120,7 +120,7 @@ OTEL_ENDPOINT=http://collector:4317
 Run with production settings:
 
 ```bash
-uv run python -m clean_interfaces.main --dotenv prod.env
+uv run python -m city_data_backend.main --dotenv prod.env
 ```
 
 ## Understanding the Output
@@ -128,9 +128,9 @@ uv run python -m clean_interfaces.main --dotenv prod.env
 ### Console Logging (Development)
 
 ```
-2025-07-20 10:30:45 [INFO] clean_interfaces.app: Application initialized
-2025-07-20 10:30:45 [INFO] clean_interfaces.app: Starting CLI interface
-2025-07-20 10:30:45 [DEBUG] clean_interfaces.interfaces.cli: CLI ready
+2025-07-20 10:30:45 [INFO] city_data_backend.app: Application initialized
+2025-07-20 10:30:45 [INFO] city_data_backend.app: Starting CLI interface
+2025-07-20 10:30:45 [DEBUG] city_data_backend.interfaces.cli: CLI ready
 ```
 
 ### JSON Logging (Production)
@@ -139,7 +139,7 @@ uv run python -m clean_interfaces.main --dotenv prod.env
 {
     "timestamp": "2025-07-20T10:30:45.123Z",
     "level": "info",
-    "logger": "clean_interfaces.app",
+    "logger": "city_data_backend.app",
     "message": "Application initialized",
     "interface": "restapi"
 }
@@ -151,38 +151,38 @@ uv run python -m clean_interfaces.main --dotenv prod.env
 
 ```bash
 # Debug level for detailed output
-LOG_LEVEL=DEBUG uv run python -m clean_interfaces.main
+LOG_LEVEL=DEBUG uv run python -m city_data_backend.main
 
 # Error level for production
-LOG_LEVEL=ERROR uv run python -m clean_interfaces.main
+LOG_LEVEL=ERROR uv run python -m city_data_backend.main
 ```
 
 ### Switching Interfaces
 
 ```bash
 # CLI Interface (default)
-INTERFACE_TYPE=cli uv run python -m clean_interfaces.main
+INTERFACE_TYPE=cli uv run python -m city_data_backend.main
 
 # REST API Interface
-INTERFACE_TYPE=restapi uv run python -m clean_interfaces.main
+INTERFACE_TYPE=restapi uv run python -m city_data_backend.main
 ```
 
 ### Using Different Configurations
 
 ```bash
 # Development
-uv run python -m clean_interfaces.main --dotenv dev.env
+uv run python -m city_data_backend.main --dotenv dev.env
 
 # Testing
-uv run python -m clean_interfaces.main --dotenv test.env
+uv run python -m city_data_backend.main --dotenv test.env
 
 # Production
-uv run python -m clean_interfaces.main --dotenv prod.env
+uv run python -m city_data_backend.main --dotenv prod.env
 ```
 
 ## What's Next?
 
-Now that you have Clean Interfaces running:
+Now that you have City Data Backend running:
 
 1. **Explore the Interfaces**
 
@@ -205,5 +205,5 @@ Now that you have Clean Interfaces running:
 ## Getting Help
 
 -   📖 Check the [full documentation](index.md)
--   🐛 Report issues on [GitHub](https://github.com/your-username/clean-interfaces/issues)
--   💬 Ask questions in [Discussions](https://github.com/your-username/clean-interfaces/discussions)
+-   🐛 Report issues on [GitHub](https://github.com/your-username/city-data-backend/issues)
+-   💬 Ask questions in [Discussions](https://github.com/your-username/city-data-backend/discussions)

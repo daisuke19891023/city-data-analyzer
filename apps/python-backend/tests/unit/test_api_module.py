@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 
-from clean_interfaces.api import app
+from city_data_backend.api import app
 
 
 def test_api_module_exposes_fastapi_app() -> None:

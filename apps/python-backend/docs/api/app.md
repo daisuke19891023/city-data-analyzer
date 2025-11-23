@@ -17,7 +17,7 @@ The application module handles:
 The main application class that coordinates the entire system.
 
 ```python
-from clean_interfaces.app import Application
+from city_data_backend.app import Application
 
 class Application(BaseComponent):
     """Main application class."""
@@ -97,7 +97,7 @@ Convenience function that creates and runs the application in one call.
 ### Basic Usage
 
 ```python
-from clean_interfaces.app import run_app
+from city_data_backend.app import run_app
 
 # Run with default configuration
 run_app()
@@ -107,7 +107,7 @@ run_app()
 
 ```python
 from pathlib import Path
-from clean_interfaces.app import create_app
+from city_data_backend.app import create_app
 
 # Create app with specific env file
 app = create_app(Path(".env.production"))
@@ -121,7 +121,7 @@ app.run()
 ```python
 # main.py
 from pathlib import Path
-from clean_interfaces.app import run_app
+from city_data_backend.app import run_app
 import typer
 
 def main(dotenv: Path | None = None) -> None:
@@ -135,7 +135,7 @@ if __name__ == "__main__":
 ### Error Handling
 
 ```python
-from clean_interfaces.app import Application
+from city_data_backend.app import Application
 
 app = Application()
 

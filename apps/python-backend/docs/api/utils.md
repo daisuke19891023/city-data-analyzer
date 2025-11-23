@@ -9,7 +9,7 @@ File operations with encoding support and structured logging.
 ### FileHandler
 
 ```python
-from clean_interfaces.utils.file_handler import FileHandler
+from city_data_backend.utils.file_handler import FileHandler
 
 class FileHandler(BaseComponent):
     """Handle file operations with encoding support."""
@@ -128,7 +128,7 @@ def write_yaml(
 ### Convenience Functions
 
 ```python
-from clean_interfaces.utils.file_handler import (
+from city_data_backend.utils.file_handler import (
     read_text, write_text,
     read_json, write_json,
     read_yaml, write_yaml
@@ -146,7 +146,7 @@ Structured logging configuration. OpenTelemetry exporter integration has been re
 ### configure_logging()
 
 ```python
-from clean_interfaces.utils.logger import configure_logging
+from city_data_backend.utils.logger import configure_logging
 
 def configure_logging(
     level: str = "INFO",
@@ -166,7 +166,7 @@ def configure_logging(
 ### get_logger()
 
 ```python
-from clean_interfaces.utils.logger import get_logger
+from city_data_backend.utils.logger import get_logger
 
 def get_logger(name: str | None = None) -> BoundLogger:
     """Get a configured logger instance.
@@ -186,7 +186,7 @@ def get_logger(name: str | None = None) -> BoundLogger:
 ### log_performance
 
 ```python
-from clean_interfaces.utils.logger import log_performance
+from city_data_backend.utils.logger import log_performance
 
 @log_performance
 def slow_operation(data: list[int]) -> int:
@@ -205,7 +205,7 @@ Application settings management with environment variable support.
 ### LoggingSettings
 
 ```python
-from clean_interfaces.utils.settings import LoggingSettings
+from city_data_backend.utils.settings import LoggingSettings
 
 class LoggingSettings(BaseSettings):
     """Logging configuration settings."""
@@ -229,7 +229,7 @@ class LoggingSettings(BaseSettings):
 ### InterfaceSettings
 
 ```python
-from clean_interfaces.utils.settings import InterfaceSettings
+from city_data_backend.utils.settings import InterfaceSettings
 
 class InterfaceSettings(BaseSettings):
     """Interface configuration settings."""
@@ -243,7 +243,7 @@ class InterfaceSettings(BaseSettings):
 ### get_logging_settings()
 
 ```python
-from clean_interfaces.utils.settings import get_logging_settings
+from city_data_backend.utils.settings import get_logging_settings
 
 def get_logging_settings() -> LoggingSettings:
     """Get logging settings (singleton).
@@ -256,7 +256,7 @@ def get_logging_settings() -> LoggingSettings:
 ### get_interface_settings()
 
 ```python
-from clean_interfaces.utils.settings import get_interface_settings
+from city_data_backend.utils.settings import get_interface_settings
 
 def get_interface_settings() -> InterfaceSettings:
     """Get interface settings (singleton).
@@ -271,7 +271,7 @@ def get_interface_settings() -> InterfaceSettings:
 ### File Operations
 
 ```python
-from clean_interfaces.utils.file_handler import FileHandler
+from city_data_backend.utils.file_handler import FileHandler
 
 # Context manager usage
 with FileHandler(encoding="utf-8") as handler:
@@ -289,8 +289,8 @@ with FileHandler(encoding="utf-8") as handler:
 ### Logging Setup
 
 ```python
-from clean_interfaces.utils.logger import configure_logging, get_logger
-from clean_interfaces.utils.settings import get_logging_settings
+from city_data_backend.utils.logger import configure_logging, get_logger
+from city_data_backend.utils.settings import get_logging_settings
 
 # Configure from settings
 settings = get_logging_settings()
@@ -308,8 +308,8 @@ logger.info("application_started", version="1.0.0")
 ### OpenTelemetry Integration
 
 ```python
-from clean_interfaces.utils.otel_exporter import create_exporters
-from clean_interfaces.utils.settings import get_logging_settings
+from city_data_backend.utils.otel_exporter import create_exporters
+from city_data_backend.utils.settings import get_logging_settings
 
 settings = get_logging_settings()
 exporters = create_exporters(settings)

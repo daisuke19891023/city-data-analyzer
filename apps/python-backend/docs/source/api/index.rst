@@ -1,7 +1,7 @@
 API Reference
 =============
 
-This section contains the complete API reference for Clean Interfaces.
+This section contains the complete API reference for City Data Backend.
 
 .. toctree::
    :maxdepth: 2
@@ -21,10 +21,10 @@ Core Modules
    :toctree: _autosummary
    :recursive:
 
-   clean_interfaces.app
-   clean_interfaces.base
-   clean_interfaces.types
-   clean_interfaces.main
+   city_data_backend.app
+   city_data_backend.base
+   city_data_backend.types
+   city_data_backend.main
 
 Interface Modules
 -----------------
@@ -33,10 +33,10 @@ Interface Modules
    :toctree: _autosummary
    :recursive:
 
-   clean_interfaces.interfaces.base
-   clean_interfaces.interfaces.cli
-   clean_interfaces.interfaces.restapi
-   clean_interfaces.interfaces.factory
+   city_data_backend.interfaces.base
+   city_data_backend.interfaces.cli
+   city_data_backend.interfaces.restapi
+   city_data_backend.interfaces.factory
 
 Model Modules
 -------------
@@ -45,8 +45,8 @@ Model Modules
    :toctree: _autosummary
    :recursive:
 
-   clean_interfaces.models.api
-   clean_interfaces.models.io
+   city_data_backend.models.api
+   city_data_backend.models.io
 
 Utility Modules
 ---------------
@@ -55,6 +55,6 @@ Utility Modules
    :toctree: _autosummary
    :recursive:
 
-   clean_interfaces.utils.logger
-   clean_interfaces.utils.settings
-   clean_interfaces.utils.file_handler
+   city_data_backend.utils.logger
+   city_data_backend.utils.settings
+   city_data_backend.utils.file_handler

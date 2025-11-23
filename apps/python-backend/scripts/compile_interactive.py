@@ -8,7 +8,7 @@ from pathlib import Path
 
 import structlog
 
-from clean_interfaces.services.optimization import OptimizationService
+from city_data_backend.services.optimization import OptimizationService
 
 logger = structlog.get_logger()
 

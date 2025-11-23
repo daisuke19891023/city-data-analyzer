@@ -1,6 +1,6 @@
 # Environment Variables Guide
 
-Clean Interfaces uses environment variables for configuration, following the 12-factor app methodology.
+City Data Backend uses environment variables for configuration, following the 12-factor app methodology.
 
 ## Overview
 
@@ -51,10 +51,10 @@ Load it when running the application:
 
 ```bash
 # Using the CLI option
-python -m clean_interfaces.main --dotenv .env
+python -m city_data_backend.main --dotenv .env
 
 # Or with python-dotenv auto-loading
-python -m clean_interfaces.main
+python -m city_data_backend.main
 ```
 
 ## Environment-Specific Configuration
@@ -63,13 +63,13 @@ Use different `.env` files for different environments:
 
 ```bash
 # Development
-python -m clean_interfaces.main --dotenv .env.development
+python -m city_data_backend.main --dotenv .env.development
 
 # Production
-python -m clean_interfaces.main --dotenv .env.production
+python -m city_data_backend.main --dotenv .env.production
 
 # Testing
-python -m clean_interfaces.main --dotenv .env.test
+python -m city_data_backend.main --dotenv .env.test
 ```
 
 ## REST API Specific Variables
@@ -135,7 +135,7 @@ python -c "import os; print(dict(os.environ))"
 echo $INTERFACE_TYPE
 
 # Run with debug logging
-LOG_LEVEL=DEBUG python -m clean_interfaces.main
+LOG_LEVEL=DEBUG python -m city_data_backend.main
 ```
 
 ## Next Steps

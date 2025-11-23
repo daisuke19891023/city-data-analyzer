@@ -10,9 +10,9 @@ from typing import Any
 import structlog
 from sqlalchemy import select
 
-from clean_interfaces.database import configure_engine, get_session
-from clean_interfaces.db_models import AnalysisQuery, InsightCandidate, InsightFeedback
-from clean_interfaces.services.datasets import DatasetRepository
+from city_data_backend.database import configure_engine, get_session
+from city_data_backend.db_models import AnalysisQuery, InsightCandidate, InsightFeedback
+from city_data_backend.services.datasets import DatasetRepository
 
 logger = structlog.get_logger()
 

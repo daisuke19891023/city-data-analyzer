@@ -1,15 +1,15 @@
 Development Guide
 =================
 
-This guide covers development setup and contribution guidelines for Clean Interfaces.
+This guide covers development setup and contribution guidelines for City Data Backend.
 
 Development Setup
 -----------------
 
 1. Clone the repository::
 
-    git clone https://github.com/your-username/clean-interfaces.git
-    cd clean-interfaces
+    git clone https://github.com/your-username/city-data-backend.git
+    cd city-data-backend
 
 2. Install development dependencies::
 

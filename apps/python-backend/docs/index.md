@@ -1,6 +1,6 @@
-# Clean Interfaces
+# City Data Backend
 
-Welcome to **Clean Interfaces** - a flexible Python application framework with multiple interface types and comprehensive logging support.
+Welcome to **City Data Backend** - a flexible Python application framework with multiple interface types and comprehensive logging support.
 
 ## Features
 
@@ -17,8 +17,8 @@ Welcome to **Clean Interfaces** - a flexible Python application framework with m
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/clean-interfaces.git
-cd clean-interfaces
+git clone https://github.com/your-username/city-data-backend.git
+cd city-data-backend
 
 # Install dependencies
 uv sync
@@ -27,18 +27,18 @@ uv sync
 cp .env.example .env
 
 # Run the application (CLI mode)
-uv run python -m clean_interfaces.main
+uv run python -m city_data_backend.main
 
 # Run with custom environment file
-uv run python -m clean_interfaces.main --dotenv prod.env
+uv run python -m city_data_backend.main --dotenv prod.env
 
 # Run REST API mode
-INTERFACE_TYPE=restapi uv run python -m clean_interfaces.main
+INTERFACE_TYPE=restapi uv run python -m city_data_backend.main
 ```
 
 ## Project Overview
 
-Clean Interfaces provides a clean, extensible architecture for building Python applications with multiple interface types. Whether you need a command-line tool, a REST API, or both, Clean Interfaces has you covered.
+City Data Backend provides a clean, extensible architecture for building Python applications with multiple interface types. Whether you need a command-line tool, a REST API, or both, City Data Backend has you covered.
 
 ### Key Components
 

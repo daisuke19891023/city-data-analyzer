@@ -14,9 +14,9 @@ class TestSwaggerUIE2E:
         monkeypatch.setenv("INTERFACE_TYPE", "restapi")
 
         # Import here to ensure environment variable is set
-        from clean_interfaces.interfaces.factory import InterfaceFactory
-        from clean_interfaces.interfaces.restapi import RestAPIInterface
-        from clean_interfaces.types import InterfaceType
+        from city_data_backend.interfaces.factory import InterfaceFactory
+        from city_data_backend.interfaces.restapi import RestAPIInterface
+        from city_data_backend.types import InterfaceType
 
         factory = InterfaceFactory()
         interface = factory.create(InterfaceType.RESTAPI)
@@ -36,10 +36,10 @@ class TestSwaggerUIE2E:
         # Verify content includes dynamic documentation
         content = response.text.lower()
         assert "swagger-ui" in content
-        assert "clean interfaces api" in content
+        assert "city data backend api" in content
 
         # Verify dynamic content from source code is included
-        assert "interface" in content or "restapi" in content
+        assert "restapi" in content or "cli" in content
 
     def test_swagger_ui_json_schema(self, client: TestClient) -> None:
         """Test Swagger UI JSON schema endpoint with dynamic content."""
@@ -53,7 +53,7 @@ class TestSwaggerUIE2E:
         assert "components" in schema
 
         # Verify metadata from dynamic content generation
-        assert schema["info"]["title"] == "Clean Interfaces API"
+        assert schema["info"]["title"] == "City Data Backend API"
         assert "dynamic_content" in schema["info"]
         assert schema["info"]["dynamic_content"]["source_files_analyzed"] > 0
         assert schema["info"]["dynamic_content"]["documentation_files_found"] > 0
@@ -103,5 +103,6 @@ class TestSwaggerUIE2E:
         # Verify that the UI includes references to analyzed content
         ui_content = ui_response.text.lower()
         for interface in analysis["interfaces"]:
-            if interface.lower() != "base":  # Skip base interface
-                assert interface.lower() in ui_content or "interface" in ui_content
+            normalized_interface = interface.lower().replace("interface", "").strip()
+            if normalized_interface:
+                assert normalized_interface in ui_content

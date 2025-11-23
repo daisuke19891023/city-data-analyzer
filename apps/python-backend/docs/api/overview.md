@@ -1,10 +1,10 @@
 # API Reference Overview
 
-This section provides detailed API documentation for all Clean Interfaces modules and components.
+This section provides detailed API documentation for all City Data Backend modules and components.
 
 ## Module Structure
 
-The Clean Interfaces package is organized into the following modules:
+The City Data Backend package is organized into the following modules:
 
 ### Core Modules
 
@@ -37,16 +37,16 @@ The package provides convenient imports:
 
 ```python
 # Main application
-from clean_interfaces.app import Application, create_app, run_app
+from city_data_backend.app import Application, create_app, run_app
 
 # Base components
-from clean_interfaces.base import BaseComponent
+from city_data_backend.base import BaseComponent
 
 # Types
-from clean_interfaces.types import InterfaceType
+from city_data_backend.types import InterfaceType
 
 # Interfaces
-from clean_interfaces.interfaces import (
+from city_data_backend.interfaces import (
     BaseInterface,
     CLIInterface,
     RestAPIInterface,
@@ -54,17 +54,17 @@ from clean_interfaces.interfaces import (
 )
 
 # Models
-from clean_interfaces.models.api import (
+from city_data_backend.models.api import (
     HealthResponse,
     WelcomeResponse,
     ErrorResponse
 )
-from clean_interfaces.models.io import WelcomeMessage
+from city_data_backend.models.io import WelcomeMessage
 
 # Utilities
-from clean_interfaces.utils.file_handler import FileHandler
-from clean_interfaces.utils.logger import configure_logging, get_logger
-from clean_interfaces.utils.settings import (
+from city_data_backend.utils.file_handler import FileHandler
+from city_data_backend.utils.logger import configure_logging, get_logger
+from city_data_backend.utils.settings import (
     get_logging_settings,
     get_interface_settings
 )
@@ -106,7 +106,7 @@ class MyComponent(BaseComponent):
 Settings use Pydantic for validation and environment variable loading:
 
 ```python
-from clean_interfaces.utils.settings import get_logging_settings
+from city_data_backend.utils.settings import get_logging_settings
 
 settings = get_logging_settings()
 print(settings.log_level)  # From LOG_LEVEL env var

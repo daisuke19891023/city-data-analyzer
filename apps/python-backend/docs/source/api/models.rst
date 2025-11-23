@@ -1,12 +1,12 @@
-clean_interfaces.models
+city_data_backend.models
 =======================
 
-Data models for Clean Interfaces.
+Data models for City Data Backend.
 
 API Models
 ----------
 
-.. automodule:: clean_interfaces.models.api
+.. automodule:: city_data_backend.models.api
    :members:
    :undoc-members:
    :show-inheritance:
@@ -14,7 +14,7 @@ API Models
 I/O Models
 ----------
 
-.. automodule:: clean_interfaces.models.io
+.. automodule:: city_data_backend.models.io
    :members:
    :undoc-members:
    :show-inheritance:
