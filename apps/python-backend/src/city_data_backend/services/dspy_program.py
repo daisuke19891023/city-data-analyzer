@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
@@ -33,11 +34,48 @@ logger = get_logger()
 DEFAULT_ARTIFACT_ROOT = Path(__file__).resolve().parents[3] / "dspy" / "optimization"
 
 
+_VERSION_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
+
+
 def _artifact_root(base_dir: Path | None = None) -> Path:
     """Return artifact root directory, creating it if necessary."""
     root = base_dir or DEFAULT_ARTIFACT_ROOT
     root.mkdir(parents=True, exist_ok=True)
     return root
+
+
+def _validate_version(version: str) -> None:
+    """Ensure version string only uses allowed characters."""
+    if not _VERSION_PATTERN.fullmatch(version):
+        msg = (
+            "Version may only contain alphanumeric characters, hyphens, underscores, "
+            "or dots"
+        )
+        raise ValueError(msg)
+
+
+def _resolve_artifact_path(
+    version: str,
+    base_dir: Path | None = None,
+    output_path: Path | None = None,
+) -> Path:
+    """Return validated artifact path within the configured root directory."""
+    artifact_root = _artifact_root(base_dir).resolve()
+
+    if output_path:
+        candidate = (
+            output_path if output_path.is_absolute() else artifact_root / output_path
+        )
+        resolved = candidate.resolve()
+        if not resolved.is_relative_to(artifact_root):
+            msg = (
+                f"Output path '{resolved}' must be within artifact root "
+                f"'{artifact_root}'"
+            )
+            raise ValueError(msg)
+        return resolved
+
+    return (artifact_root / f"{version}.json").resolve()
 
 
 def persist_compiled_program(
@@ -52,8 +90,12 @@ def persist_compiled_program(
     managed_session = session is None
     db_session = session or get_session()
     try:
-        artifact_dir = output_path.parent if output_path else _artifact_root(base_dir)
-        artifact_path = output_path if output_path else artifact_dir / f"{version}.json"
+        _validate_version(version)
+        artifact_path = _resolve_artifact_path(
+            version, base_dir=base_dir, output_path=output_path,
+        )
+        artifact_dir = artifact_path.parent
+        artifact_dir.mkdir(parents=True, exist_ok=True)
         payload = {"version": version, "trainset": trainset, "metric": metric}
         artifact_path.write_text(
             json.dumps(payload, ensure_ascii=False, indent=2),
