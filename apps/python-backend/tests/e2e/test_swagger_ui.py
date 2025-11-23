@@ -12,6 +12,7 @@ class TestSwaggerUIE2E:
         """Create test client with RestAPI interface."""
         # Set environment variable to use RestAPI interface
         monkeypatch.setenv("INTERFACE_TYPE", "restapi")
+        monkeypatch.setenv("API_TOKEN", "test-token")
 
         # Import here to ensure environment variable is set
         from city_data_backend.interfaces.factory import InterfaceFactory
@@ -25,7 +26,7 @@ class TestSwaggerUIE2E:
         assert isinstance(interface, RestAPIInterface)
 
         # Get the FastAPI app from the interface
-        return TestClient(interface.app)
+        return TestClient(interface.app, headers={"Authorization": "Bearer test-token"})
 
     def test_swagger_ui_endpoint(self, client: TestClient) -> None:
         """Test Swagger UI endpoint returns HTML with dynamic content."""

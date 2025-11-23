@@ -12,6 +12,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.routing import APIRouter
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette import status
@@ -61,6 +62,7 @@ from city_data_backend.services.dspy_program import (
 from city_data_backend.services.feedback import FeedbackService
 from city_data_backend.services.plan_experiments import PlanExperiments
 from city_data_backend.types import InterfaceType
+from city_data_backend.utils.settings import get_auth_settings
 
 from .base import BaseInterface
 
@@ -76,6 +78,9 @@ def get_db() -> Iterator[Session]:
 
 db_dep = Annotated[Session, Depends(get_db)]
 
+auth_scheme = HTTPBearer(auto_error=False)
+AuthCredentials = Annotated[HTTPAuthorizationCredentials | None, Depends(auth_scheme)]
+
 
 def validation_error_handler(
     _request: Request,
@@ -85,6 +90,36 @@ def validation_error_handler(
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
         content={"detail": jsonable_encoder(exc.errors())},
+    )
+
+
+def http_error_handler(_request: Request, exc: HTTPException) -> JSONResponse:
+    """Return consistent JSON response for HTTP errors."""
+    content = {"detail": exc.detail or "An error occurred"}
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=content,
+        headers=exc.headers,
+    )
+
+
+def authenticate_request(credentials: AuthCredentials) -> HTTPAuthorizationCredentials:
+    """Validate bearer token against configured settings."""
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    settings = get_auth_settings()
+    if settings.api_token and credentials.credentials == settings.api_token:
+        return credentials
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Invalid authentication token",
+        headers={"WWW-Authenticate": "Bearer"},
     )
 
 
@@ -159,8 +194,13 @@ class RestAPIInterface(BaseInterface):
             version="1.0.0",
             exception_handlers={
                 RequestValidationError: validation_error_handler,
+                HTTPException: http_error_handler,
             },
         )
+
+        self._auth_dependency = Depends(authenticate_request)
+        self._openapi_schema: dict[str, Any] | None = None
+        self.app.openapi = self._custom_openapi  # type: ignore[assignment]
 
         self._setup_routes()
         self.logger.info("RestAPI interface initialized")
@@ -191,24 +231,68 @@ class RestAPIInterface(BaseInterface):
         self._setup_feedback_routes()
         self._setup_experiment_routes()
 
+    def _custom_openapi(self) -> dict[str, Any]:
+        """Generate OpenAPI schema with security definitions."""
+        if self._openapi_schema:
+            return self._openapi_schema
+
+        openapi_schema = get_openapi(
+            title=self.app.title,
+            version=self.app.version,
+            routes=self.app.routes,
+        )
+
+        security_scheme = {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+        components = openapi_schema.setdefault("components", {})
+        security_schemes = components.setdefault("securitySchemes", {})
+        security_schemes.setdefault("bearerAuth", security_scheme)
+
+        for path_item in openapi_schema.get("paths", {}).values():
+            for method in path_item.values():
+                method.setdefault("security", [{"bearerAuth": []}])
+
+        self._openapi_schema = openapi_schema
+        self.app.openapi_schema = openapi_schema  # type: ignore[assignment]
+        return self._openapi_schema
+
     def _setup_root_routes(self) -> None:
-        @self.app.get("/", response_class=RedirectResponse)
+        dependencies = [self._auth_dependency]
+
+        @self.app.get("/", response_class=RedirectResponse, dependencies=dependencies)
         async def root() -> str:  # type: ignore[misc]
             """Redirect root to API documentation."""
             return "/docs"  # type: ignore[return-value]
 
-        @self.app.get("/health", response_model=HealthResponse)
+        @self.app.get(
+            "/health",
+            response_model=HealthResponse,
+            dependencies=dependencies,
+        )
         async def health() -> HealthResponse:  # type: ignore[misc]
             """Health check endpoint."""
             return HealthResponse()
 
-        @self.app.get("/api/v1/welcome", response_model=WelcomeResponse)
+        @self.app.get(
+            "/api/v1/welcome",
+            response_model=WelcomeResponse,
+            dependencies=dependencies,
+        )
         async def welcome() -> WelcomeResponse:  # type: ignore[misc]
             """Welcome message endpoint."""
             return WelcomeResponse()
 
     def _setup_swagger_routes(self) -> None:
-        @self.app.get("/api/v1/swagger-ui", response_class=HTMLResponse)
+        dependencies = [self._auth_dependency]
+
+        @self.app.get(
+            "/api/v1/swagger-ui",
+            response_class=HTMLResponse,
+            dependencies=dependencies,
+        )
         async def enhanced_swagger_ui() -> str:  # type: ignore[misc]
             """Enhanced Swagger UI with dynamic content generation."""
             schema_url = "/api/v1/swagger-ui/schema"
@@ -265,14 +349,13 @@ class RestAPIInterface(BaseInterface):
 </body>
 </html>"""
 
-        @self.app.get("/api/v1/swagger-ui/schema")
+        @self.app.get(
+            "/api/v1/swagger-ui/schema",
+            dependencies=dependencies,
+        )
         async def swagger_ui_schema() -> dict[str, Any]:  # type: ignore[misc]
             """Enhanced OpenAPI schema with dynamic content metadata."""
-            base_schema = get_openapi(
-                title=self.app.title,
-                version=self.app.version,
-                routes=self.app.routes,
-            )
+            base_schema = self._custom_openapi()
 
             if "info" not in base_schema:
                 base_schema["info"] = {}
@@ -291,6 +374,7 @@ class RestAPIInterface(BaseInterface):
         @self.app.get(
             "/api/v1/swagger-ui/analysis",
             response_model=SwaggerAnalysisResponse,
+            dependencies=dependencies,
         )
         async def swagger_ui_analysis() -> SwaggerAnalysisResponse:  # type: ignore[misc]
             """Source code and documentation analysis for Swagger UI."""
@@ -306,7 +390,9 @@ class RestAPIInterface(BaseInterface):
             )
 
     def _setup_dataset_routes(self) -> None:
-        @self.app.get("/datasets")
+        dependencies = [self._auth_dependency]
+
+        @self.app.get("/datasets", dependencies=dependencies)
         async def list_datasets(  # type: ignore[misc]
             db: db_dep,
         ) -> list[DatasetMetadata]:
@@ -314,10 +400,13 @@ class RestAPIInterface(BaseInterface):
             return repo.list_datasets()
 
     def _setup_interactive_routes(self) -> None:
+        dependencies = [self._auth_dependency]
+
         @self.app.post(
             "/dspy/interactive",
             response_model=InteractiveResponse,
             status_code=status.HTTP_200_OK,
+            dependencies=dependencies,
         )
         async def run_interactive(  # type: ignore[misc]
             payload: InteractiveRequest,
@@ -328,10 +417,13 @@ class RestAPIInterface(BaseInterface):
             return program.run(payload)
 
     def _setup_optimization_routes(self) -> None:
+        dependencies = [self._auth_dependency]
+
         @self.app.post(
             "/dspy/optimization",
             response_model=OptimizationArtifactResponse,
             status_code=status.HTTP_201_CREATED,
+            dependencies=dependencies,
         )
         async def start_optimization(  # type: ignore[misc]
             payload: OptimizationArtifactRequest,
@@ -354,6 +446,7 @@ class RestAPIInterface(BaseInterface):
         @self.app.get(
             "/dspy/optimization",
             response_model=OptimizationArtifactResponse,
+            dependencies=dependencies,
         )
         async def get_latest_optimization(  # type: ignore[misc]
             db: db_dep,
@@ -374,6 +467,7 @@ class RestAPIInterface(BaseInterface):
         @self.app.get(
             "/dspy/optimization/history",
             response_model=list[OptimizationArtifactResponse],
+            dependencies=dependencies,
         )
         async def list_optimization_history(  # type: ignore[misc]
             db: db_dep,
@@ -381,7 +475,7 @@ class RestAPIInterface(BaseInterface):
             artifacts = list_program_artifacts(db)
             return [to_artifact_response(artifact) for artifact in artifacts]
 
-        router = cast("Any", APIRouter())
+        router = cast("Any", APIRouter(dependencies=dependencies))
 
         @router.patch(
             "/dspy/optimization/{artifact_id}",
@@ -409,10 +503,13 @@ class RestAPIInterface(BaseInterface):
         app_router.include_router(router)
 
     def _setup_feedback_routes(self) -> None:
+        dependencies = [self._auth_dependency]
+
         @self.app.post(
             "/feedback",
             status_code=status.HTTP_201_CREATED,
             response_model=FeedbackResponse,
+            dependencies=dependencies,
         )
         async def submit_feedback(  # type: ignore[misc]
             payload: FeedbackRequest,
@@ -441,10 +538,13 @@ class RestAPIInterface(BaseInterface):
             )
 
     def _setup_experiment_routes(self) -> None:
+        dependencies = [self._auth_dependency]
+
         @self.app.post(
             "/experiments",
             status_code=status.HTTP_201_CREATED,
             response_model=ExperimentCreateResponse,
+            dependencies=dependencies,
         )
         async def create_experiment(  # type: ignore[misc]
             payload: ExperimentCreateRequest,
@@ -488,7 +588,11 @@ class RestAPIInterface(BaseInterface):
                 job_count=len(planned_jobs),
             )
 
-        @self.app.get("/experiments", response_model=list[ExperimentModel])
+        @self.app.get(
+            "/experiments",
+            response_model=list[ExperimentModel],
+            dependencies=dependencies,
+        )
         async def list_experiments(  # type: ignore[misc]
             db: db_dep,
         ) -> list[ExperimentModel]:
@@ -498,6 +602,7 @@ class RestAPIInterface(BaseInterface):
         @self.app.get(
             "/experiments/{experiment_id}",
             response_model=ExperimentModel,
+            dependencies=dependencies,
         )
         async def get_experiment(  # type: ignore[misc]
             experiment_id: int,
@@ -514,6 +619,7 @@ class RestAPIInterface(BaseInterface):
         @self.app.get(
             "/experiments/{experiment_id}/insights",
             response_model=InsightsResponse,
+            dependencies=dependencies,
         )
         async def list_insights(  # type: ignore[misc]
             experiment_id: int,
@@ -535,6 +641,7 @@ class RestAPIInterface(BaseInterface):
         @self.app.post(
             "/insights/{candidate_id}/feedback",
             response_model=InsightCandidateModel,
+            dependencies=dependencies,
         )
         async def submit_feedback(  # type: ignore[misc]
             candidate_id: int,

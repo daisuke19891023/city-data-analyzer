@@ -33,10 +33,17 @@ class DatasetMeta(TypedDict):
 def configure_in_memory_db(monkeypatch: pytest.MonkeyPatch) -> None:
     """Configure shared in-memory SQLite for API tests."""
     monkeypatch.setenv("DATABASE_URL", "sqlite+pysqlite:///:memory:?cache=shared")
+    monkeypatch.setenv("API_TOKEN", "test-token")
     configure_engine(os.environ["DATABASE_URL"])
     session = get_session()
     init_database(session)
     session.close()
+
+
+@pytest.fixture
+def auth_headers() -> dict[str, str]:
+    """Return default authorization header for tests."""
+    return {"Authorization": "Bearer test-token"}
 
 
 @pytest.fixture
@@ -73,10 +80,26 @@ def seed_dataset() -> int:
 
 
 @pytest.fixture
-def api_client() -> TestClient:
-    """Return TestClient bound to RestAPI interface."""
+def api_client(auth_headers: dict[str, str]) -> TestClient:
+    """Return TestClient bound to RestAPI interface with auth headers."""
     interface = RestAPIInterface()
-    return TestClient(interface.app)
+    return TestClient(interface.app, headers=auth_headers)
+
+
+def test_missing_token_returns_401() -> None:
+    """Reject requests without bearer token."""
+    interface = RestAPIInterface()
+    client = TestClient(interface.app)
+    response = client.get("/datasets")
+    assert response.status_code == 401
+
+
+def test_invalid_token_returns_403() -> None:
+    """Reject requests with an invalid bearer token."""
+    interface = RestAPIInterface()
+    client = TestClient(interface.app, headers={"Authorization": "Bearer invalid"})
+    response = client.get("/datasets")
+    assert response.status_code == 403
 
 
 @pytest.fixture(autouse=True)

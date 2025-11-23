@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
 
+import pytest
 from fastapi.testclient import TestClient
 
 from city_data_backend.database import configure_engine, session_scope
@@ -14,20 +15,21 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-def setup_client(tmp_path: Path) -> TestClient:
+@pytest.fixture
+def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     """Configure in-memory DB and return a FastAPI test client."""
+    token = "test-token"  # noqa: S105
+    monkeypatch.setenv("API_TOKEN", token)
     configure_engine("sqlite+pysqlite:///:memory:")
     with session_scope() as session:
         init_database(session)
     dspy_program.DEFAULT_ARTIFACT_ROOT = tmp_path
     interface = RestAPIInterface()
-    return TestClient(interface.app)
+    return TestClient(interface.app, headers={"Authorization": f"Bearer {token}"})
 
 
-def test_optimization_lifecycle(tmp_path: Path) -> None:
+def test_optimization_lifecycle(client: TestClient) -> None:
     """End-to-end lifecycle for optimization endpoints."""
-    client = setup_client(tmp_path)
-
     trainset_v1: list[dict[str, Any]] = [
         {"question": "Q1", "query_spec": {"filters": []}},
     ]
@@ -71,10 +73,8 @@ def test_optimization_lifecycle(tmp_path: Path) -> None:
     assert latest.json()["id"] == created_v2["id"]
 
 
-def test_optimization_validation_and_toggle_errors(tmp_path: Path) -> None:
+def test_optimization_validation_and_toggle_errors(client: TestClient) -> None:
     """Ensure validation and activation errors return appropriate responses."""
-    client = setup_client(tmp_path)
-
     invalid_payload: dict[str, object] = {
         "version": "v-invalid",
         "trainset": "bad",
