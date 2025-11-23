@@ -2,11 +2,12 @@
 
 from collections.abc import Iterator
 from datetime import UTC, datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 import uvicorn
 import uvicorn.config
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.routing import APIRouter
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
@@ -373,7 +374,13 @@ class RestAPIInterface(BaseInterface):
             artifacts = list_program_artifacts(db)
             return [to_artifact_response(artifact) for artifact in artifacts]
 
-        async def toggle_optimization(
+        router = cast(Any, APIRouter())
+
+        @router.patch(
+            "/dspy/optimization/{artifact_id}",
+            response_model=OptimizationArtifactResponse,
+        )
+        async def toggle_optimization(  # pyright: ignore[reportUnusedFunction]
             artifact_id: int,
             payload: OptimizationToggleRequest,
             db: db_dep,
@@ -391,13 +398,8 @@ class RestAPIInterface(BaseInterface):
                 ) from exc
             return to_artifact_response(artifact)
 
-        router = getattr(self.app, "router")
-        router.add_api_route(
-            "/dspy/optimization/{artifact_id}",
-            toggle_optimization,
-            methods=["PATCH"],
-            response_model=OptimizationArtifactResponse,
-        )
+        app_router = cast(Any, self.app)
+        app_router.include_router(router)
 
     def _setup_feedback_routes(self) -> None:
         @self.app.post(

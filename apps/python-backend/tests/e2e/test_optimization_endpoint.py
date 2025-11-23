@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from fastapi.testclient import TestClient
 
@@ -58,7 +58,8 @@ def test_optimization_lifecycle(tmp_path: Path) -> None:
     assert create_resp_v2.status_code == 201
     created_v2 = create_resp_v2.json()
 
-    activate = client.patch(
+    client_with_patch = cast(Any, client)
+    activate = client_with_patch.patch(
         f"/dspy/optimization/{created_v2['id']}",
         json={"active": True},
     )
@@ -82,7 +83,8 @@ def test_optimization_validation_and_toggle_errors(tmp_path: Path) -> None:
     invalid_resp = client.post("/dspy/optimization", json=invalid_payload)
     assert invalid_resp.status_code == 400
 
-    toggle_resp = client.patch(
+    client_with_patch = cast(Any, client)
+    toggle_resp = client_with_patch.patch(
         "/dspy/optimization/999",
         json={"active": True},
     )
