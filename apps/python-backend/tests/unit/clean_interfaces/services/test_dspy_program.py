@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 from clean_interfaces.database import configure_engine, get_session
 from clean_interfaces.db_models import AnalysisQuery
@@ -14,6 +15,9 @@ from clean_interfaces.services.datasets import DatasetRepository, init_database
 from clean_interfaces.services.dspy_program import (
     CompiledInteractiveProgram,
     InteractiveAnalysisProgram,
+    load_compiled_program,
+    persist_compiled_program,
+    set_active_program,
 )
 from clean_interfaces.services.query_runner import QueryRunner
 
@@ -88,3 +92,60 @@ def test_interactive_program_records_program_version() -> None:
     stored = session.query(AnalysisQuery).first()
     assert stored is not None
     assert stored.program_version == "compiled-test"
+
+
+def test_persist_compiled_program_writes_file_and_record(tmp_path: Path) -> None:
+    """Persisting a compiled program stores metadata and file."""
+    os.environ["DATABASE_URL"] = "sqlite+pysqlite:///:memory:?cache=shared"
+    configure_engine(os.environ["DATABASE_URL"])
+    session = get_session()
+    init_database(session)
+
+    artifact = persist_compiled_program(
+        version="v1",
+        trainset=[{"question": "Q", "query_spec": {"filters": []}}],
+        metric={"score": 0.8},
+        session=session,
+        base_dir=tmp_path,
+    )
+
+    assert artifact.id is not None
+    assert Path(artifact.path).exists()
+    assert Path(artifact.path).parent == tmp_path
+    assert artifact.active is False
+
+
+def test_load_compiled_program_prefers_active_version(tmp_path: Path) -> None:
+    """Load the active compiled program when available."""
+    os.environ["DATABASE_URL"] = "sqlite+pysqlite:///:memory:?cache=shared"
+    configure_engine(os.environ["DATABASE_URL"])
+    session = get_session()
+    init_database(session)
+
+    first = persist_compiled_program(
+        version="v1",
+        trainset=[{"question": "Q1", "query_spec": {"filters": []}}],
+        metric=None,
+        session=session,
+        base_dir=tmp_path,
+    )
+    second = persist_compiled_program(
+        version="v2",
+        trainset=[{"question": "Q2", "query_spec": {"filters": []}}],
+        metric=None,
+        session=session,
+        base_dir=tmp_path,
+    )
+
+    set_active_program(second.id, active=True, session=session)
+
+    program = load_compiled_program(session=session)
+
+    assert program is not None
+    assert program.version == "v2"
+    assert program.trainset[0]["question"] == "Q2"
+
+    set_active_program(first.id, active=True, session=session)
+    program_latest = load_compiled_program(session=session)
+    assert program_latest is not None
+    assert program_latest.version == "v1"

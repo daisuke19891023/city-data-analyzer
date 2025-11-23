@@ -2,11 +2,12 @@
 
 from collections.abc import Iterator
 from datetime import UTC, datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 import uvicorn
 import uvicorn.config
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.routing import APIRouter
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
@@ -21,13 +22,20 @@ from clean_interfaces.db_models import (
     Experiment,
     ExperimentJob,
     InsightCandidate,
+    CompiledProgramArtifact,
 )
 from clean_interfaces.models.api import (
     HealthResponse,
     SwaggerAnalysisResponse,
     WelcomeResponse,
 )
-from clean_interfaces.models.dspy import InteractiveRequest, InteractiveResponse
+from clean_interfaces.models.dspy import (
+    InteractiveRequest,
+    InteractiveResponse,
+    OptimizationArtifactRequest,
+    OptimizationArtifactResponse,
+    OptimizationToggleRequest,
+)
 from clean_interfaces.models.experiments import (
     ExperimentCreateRequest,
     ExperimentCreateResponse,
@@ -43,7 +51,12 @@ from clean_interfaces.services.datasets import (
     DatasetRepository,
     init_database,
 )
-from clean_interfaces.services.dspy_program import InteractiveAnalysisProgram
+from clean_interfaces.services.dspy_program import (
+    InteractiveAnalysisProgram,
+    list_program_artifacts,
+    persist_compiled_program,
+    set_active_program,
+)
 from clean_interfaces.services.feedback import FeedbackService
 from clean_interfaces.services.plan_experiments import PlanExperiments
 
@@ -116,6 +129,21 @@ def to_candidate_model(candidate: InsightCandidate) -> InsightCandidateModel:
     )
 
 
+def to_artifact_response(
+    artifact: CompiledProgramArtifact,
+) -> OptimizationArtifactResponse:
+    """Convert a compiled artifact to API response model."""
+    return OptimizationArtifactResponse(
+        id=artifact.id,
+        version=artifact.version,
+        trainset=artifact.trainset,
+        metric=artifact.metric,
+        path=artifact.path,
+        active=artifact.active,
+        created_at=artifact.created_at,
+    )
+
+
 class RestAPIInterface(BaseInterface):
     """REST API Interface implementation."""
 
@@ -157,6 +185,7 @@ class RestAPIInterface(BaseInterface):
         self._setup_swagger_routes()
         self._setup_dataset_routes()
         self._setup_interactive_routes()
+        self._setup_optimization_routes()
         self._setup_feedback_routes()
         self._setup_experiment_routes()
 
@@ -291,6 +320,86 @@ class RestAPIInterface(BaseInterface):
             repo = DatasetRepository(db)
             program = InteractiveAnalysisProgram(repo)
             return program.run(payload)
+
+    def _setup_optimization_routes(self) -> None:
+        @self.app.post(
+            "/dspy/optimization",
+            response_model=OptimizationArtifactResponse,
+            status_code=status.HTTP_201_CREATED,
+        )
+        async def start_optimization(  # type: ignore[misc]
+            payload: OptimizationArtifactRequest,
+            db: db_dep,
+        ) -> OptimizationArtifactResponse:
+            try:
+                artifact = persist_compiled_program(
+                    payload.version,
+                    payload.trainset,
+                    payload.metric,
+                    session=db,
+                )
+            except ValueError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=str(exc),
+                ) from exc
+            return to_artifact_response(artifact)
+
+        @self.app.get(
+            "/dspy/optimization",
+            response_model=OptimizationArtifactResponse,
+        )
+        async def get_latest_optimization(  # type: ignore[misc]
+            db: db_dep,
+        ) -> OptimizationArtifactResponse:
+            artifacts = list_program_artifacts(db)
+            if not artifacts:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No artifacts found",
+                )
+            active_artifact = next(
+                (artifact for artifact in artifacts if artifact.active), None,
+            )
+            target = active_artifact or artifacts[0]
+            return to_artifact_response(target)
+
+        @self.app.get(
+            "/dspy/optimization/history",
+            response_model=list[OptimizationArtifactResponse],
+        )
+        async def list_optimization_history(  # type: ignore[misc]
+            db: db_dep,
+        ) -> list[OptimizationArtifactResponse]:
+            artifacts = list_program_artifacts(db)
+            return [to_artifact_response(artifact) for artifact in artifacts]
+
+        router = cast(Any, APIRouter())
+
+        @router.patch(
+            "/dspy/optimization/{artifact_id}",
+            response_model=OptimizationArtifactResponse,
+        )
+        async def toggle_optimization(  # pyright: ignore[reportUnusedFunction]
+            artifact_id: int,
+            payload: OptimizationToggleRequest,
+            db: db_dep,
+        ) -> OptimizationArtifactResponse:
+            try:
+                artifact = set_active_program(
+                    artifact_id,
+                    payload.active,
+                    session=db,
+                )
+            except LookupError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=str(exc),
+                ) from exc
+            return to_artifact_response(artifact)
+
+        app_router = cast(Any, self.app)
+        app_router.include_router(router)
 
     def _setup_feedback_routes(self) -> None:
         @self.app.post(
